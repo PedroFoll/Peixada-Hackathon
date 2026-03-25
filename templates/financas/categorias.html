@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Categorias — Peixada Finanças{% endblock %}
+
+{% block content %}
+<main class="page-content" aria-label="Gerenciamento de categorias">
+
+  <!-- Cabeçalho -->
+  <header class="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title mb-0">Categorias</h1>
+      <p class="text-muted mb-0" style="font-size:.875rem;">
+        {{ total }} categoria{{ total|pluralize }} cadastrada{{ total|pluralize }}
+      </p>
+    </div>
+    <div>
+      <button type="button" class="btn btn-primary btn-sm"
+              data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Categoria
+      </button>
+    </div>
+  </header>
+
+  {% if categorias %}
+
+  <!-- Grid de categorias -->
+  <section aria-labelledby="titulo-categorias">
+    <div class="row g-3">
+      {% for cat in categorias %}
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <article class="card categoria-card h-100 border-0 shadow-sm">
+          <div class="card-body d-flex flex-column gap-3">
+
+            <!-- Ícone + Nome -->
+            <div class="d-flex align-items-center gap-3">
+              <span class="categoria-icone-badge" style="background-color:{{ cat.cor }};"
+                    role="img" aria-label="Ícone da categoria {{ cat.nome }}">
+                <i class="bi {{ cat.icone }}" aria-hidden="true"></i>
+              </span>
+              <div class="overflow-hidden">
+                <h2 class="h6 mb-0 fw-semibold text-truncate">{{ cat.nome }}</h2>
+                <small class="text-muted">
+                  {{ cat.total_movimentacoes }}
+                  movimentaç{{ cat.total_movimentacoes|pluralize:"ão,ões" }}
+                </small>
+              </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="mt-auto d-flex gap-2">
+              <button type="button"
+                      class="btn btn-sm btn-outline-secondary flex-fill btn-editar-categoria"
+                      data-pk="{{ cat.pk }}"
+                      data-nome="{{ cat.nome }}"
+                      data-cor="{{ cat.cor }}"
+                      data-icone="{{ cat.icone }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalEditarCategoria"
+                      aria-label="Editar categoria {{ cat.nome }}">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+              </button>
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger btn-excluir-categoria"
+                      data-pk="{{ cat.pk }}"
+                      data-nome="{{ cat.nome }}"
+                      data-count="{{ cat.total_movimentacoes }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalExcluirCategoria"
+                      aria-label="Excluir categoria {{ cat.nome }}">
+                <i class="bi bi-trash me-1" aria-hidden="true"></i>Excluir
+              </button>
+            </div>
+
+          </div>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% else %}
+
+  <!-- Estado vazio -->
+  <section aria-labelledby="titulo-vazio" class="text-center py-5">
+    <i class="bi bi-tags display-1 text-muted" aria-hidden="true"></i>
+    <h2 id="titulo-vazio" class="h4 mt-3">Nenhuma categoria cadastrada ainda</h2>
+    <p class="text-muted">Crie categorias para organizar suas receitas e despesas.</p>
+    <button type="button" class="btn btn-primary"
+            data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Categoria
+    </button>
+  </section>
+
+  {% endif %}
+
+  <!-- ============================== -->
+  <!-- Modal: Nova Categoria          -->
+  <!-- ============================== -->
+  <div class="modal fade" id="modalNovaCategoria" tabindex="-1"
+       aria-labelledby="modalNovaCategoriaLabel" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title h5" id="modalNovaCategoriaLabel">
+            <i class="bi bi-tags-fill text-primary me-2" aria-hidden="true"></i>Nova Categoria
+          </h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" action="{% url 'financas:criar_categoria' %}">
+          {% csrf_token %}
+          <input type="hidden" name="_next" value="categorias">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="n-cat-nome" class="form-label fw-medium">
+                  Nome <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+                <input type="text" name="nome" id="n-cat-nome" class="form-control"
+                       placeholder="Ex: Alimentação" maxlength="100" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-cat-cor" class="form-label fw-medium">Cor</label>
+                <input type="color" name="cor" id="n-cat-cor"
+                       class="form-control form-control-color"
+                       value="#6c757d" title="Escolha uma cor para a categoria">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-cat-icone" class="form-label fw-medium">Ícone</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="n-cat-icone-preview" aria-hidden="true">
+                    <i class="bi bi-tag"></i>
+                  </span>
+                  <select name="icone" id="n-cat-icone" class="form-select"
+                          aria-describedby="n-cat-icone-preview">
+                    <optgroup label="Alimentação &amp; Compras">
+                      <option value="bi-cart">🛒 Compras</option>
+                      <option value="bi-bag">👜 Bolsa / Vestuário</option>
+                      <option value="bi-cup-hot">☕ Café / Bebidas</option>
+                      <option value="bi-egg-fried">🍳 Alimentação</option>
+                    </optgroup>
+                    <optgroup label="Casa &amp; Utilidades">
+                      <option value="bi-house">🏠 Moradia</option>
+                      <option value="bi-lightning-charge">⚡ Energia Elétrica</option>
+                      <option value="bi-droplet">💧 Água</option>
+                      <option value="bi-wifi">📶 Internet</option>
+                      <option value="bi-phone">📱 Telefone</option>
+                    </optgroup>
+                    <optgroup label="Transporte">
+                      <option value="bi-car-front">🚗 Carro</option>
+                      <option value="bi-bicycle">🚲 Bicicleta</option>
+                      <option value="bi-airplane">✈️ Viagens</option>
+                      <option value="bi-bus-front">🚌 Transporte Público</option>
+                    </optgroup>
+                    <optgroup label="Saúde &amp; Educação">
+                      <option value="bi-heart-pulse">❤️ Saúde</option>
+                      <option value="bi-mortarboard">🎓 Educação</option>
+                      <option value="bi-book">📚 Livros</option>
+                      <option value="bi-activity">📊 Academia / Esporte</option>
+                    </optgroup>
+                    <optgroup label="Lazer &amp; Entretenimento">
+                      <option value="bi-film">🎬 Entretenimento</option>
+                      <option value="bi-music-note">🎵 Música</option>
+                      <option value="bi-controller">🎮 Jogos</option>
+                      <option value="bi-gift">🎁 Presentes</option>
+                    </optgroup>
+                    <optgroup label="Finanças">
+                      <option value="bi-cash-stack">💵 Salário / Renda</option>
+                      <option value="bi-piggy-bank">🐷 Poupança</option>
+                      <option value="bi-bank">🏦 Banco / Investimentos</option>
+                      <option value="bi-credit-card">💳 Cartão / Pagamentos</option>
+                      <option value="bi-receipt">🧾 Contas</option>
+                      <option value="bi-briefcase">💼 Trabalho</option>
+                      <option value="bi-bar-chart-line">📈 Rendimentos</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                      <option value="bi-tag" selected>🏷️ Geral</option>
+                      <option value="bi-three-dots">⋯ Outros</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Categoria
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Modal: Editar Categoria        -->
+  <!-- ============================== -->
+  <div class="modal fade" id="modalEditarCategoria" tabindex="-1"
+       aria-labelledby="modalEditarCategoriaLabel" aria-modal="true"
+       data-action-base="{% url 'financas:editar_categoria' pk=0 %}">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title h5" id="modalEditarCategoriaLabel">
+            <i class="bi bi-pencil-fill text-warning me-2" aria-hidden="true"></i>Editar Categoria
+          </h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" id="form-editar-categoria" action="#">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="e-cat-nome" class="form-label fw-medium">
+                  Nome <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+                <input type="text" name="nome" id="e-cat-nome" class="form-control"
+                       placeholder="Ex: Alimentação" maxlength="100" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="e-cat-cor" class="form-label fw-medium">Cor</label>
+                <input type="color" name="cor" id="e-cat-cor"
+                       class="form-control form-control-color"
+                       title="Escolha uma cor para a categoria">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="e-cat-icone" class="form-label fw-medium">Ícone</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="e-cat-icone-preview" aria-hidden="true">
+                    <i class="bi bi-tag"></i>
+                  </span>
+                  <select name="icone" id="e-cat-icone" class="form-select"
+                          aria-describedby="e-cat-icone-preview">
+                    <optgroup label="Alimentação &amp; Compras">
+                      <option value="bi-cart">🛒 Compras</option>
+                      <option value="bi-bag">👜 Bolsa / Vestuário</option>
+                      <option value="bi-cup-hot">☕ Café / Bebidas</option>
+                      <option value="bi-egg-fried">🍳 Alimentação</option>
+                    </optgroup>
+                    <optgroup label="Casa &amp; Utilidades">
+                      <option value="bi-house">🏠 Moradia</option>
+                      <option value="bi-lightning-charge">⚡ Energia Elétrica</option>
+                      <option value="bi-droplet">💧 Água</option>
+                      <option value="bi-wifi">📶 Internet</option>
+                      <option value="bi-phone">📱 Telefone</option>
+                    </optgroup>
+                    <optgroup label="Transporte">
+                      <option value="bi-car-front">🚗 Carro</option>
+                      <option value="bi-bicycle">🚲 Bicicleta</option>
+                      <option value="bi-airplane">✈️ Viagens</option>
+                      <option value="bi-bus-front">🚌 Transporte Público</option>
+                    </optgroup>
+                    <optgroup label="Saúde &amp; Educação">
+                      <option value="bi-heart-pulse">❤️ Saúde</option>
+                      <option value="bi-mortarboard">🎓 Educação</option>
+                      <option value="bi-book">📚 Livros</option>
+                      <option value="bi-activity">📊 Academia / Esporte</option>
+                    </optgroup>
+                    <optgroup label="Lazer &amp; Entretenimento">
+                      <option value="bi-film">🎬 Entretenimento</option>
+                      <option value="bi-music-note">🎵 Música</option>
+                      <option value="bi-controller">🎮 Jogos</option>
+                      <option value="bi-gift">🎁 Presentes</option>
+                    </optgroup>
+                    <optgroup label="Finanças">
+                      <option value="bi-cash-stack">💵 Salário / Renda</option>
+                      <option value="bi-piggy-bank">🐷 Poupança</option>
+                      <option value="bi-bank">🏦 Banco / Investimentos</option>
+                      <option value="bi-credit-card">💳 Cartão / Pagamentos</option>
+                      <option value="bi-receipt">🧾 Contas</option>
+                      <option value="bi-briefcase">💼 Trabalho</option>
+                      <option value="bi-bar-chart-line">📈 Rendimentos</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                      <option value="bi-tag">🏷️ Geral</option>
+                      <option value="bi-three-dots">⋯ Outros</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-warning">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Modal: Excluir Categoria       -->
+  <!-- ============================== -->
+  <div class="modal fade" id="modalExcluirCategoria" tabindex="-1"
+       aria-labelledby="modalExcluirCategoriaLabel" aria-modal="true"
+       data-action-base="{% url 'financas:excluir_categoria' pk=0 %}">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h3 class="modal-title h5" id="modalExcluirCategoriaLabel">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2" aria-hidden="true"></i>Excluir Categoria
+          </h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <p class="mb-1">
+            Tem certeza que deseja excluir a categoria
+            <strong id="excluir-cat-nome"></strong>?
+          </p>
+          <div id="excluir-cat-aviso" class="alert alert-warning d-none py-2 mt-2" role="alert">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            Esta categoria possui <strong id="excluir-cat-count"></strong>
+            movimentaç<span id="excluir-cat-plural"></span> vinculada<span id="excluir-cat-plural2"></span>.
+            Elas não serão excluídas, mas ficarão sem categoria.
+          </div>
+          <p class="text-muted small mb-0 mt-2">Esta ação não pode ser desfeita.</p>
+        </div>
+        <form method="post" id="form-excluir-categoria" action="#">
+          {% csrf_token %}
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash me-1" aria-hidden="true"></i>Excluir
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/categorias.js' %}"></script>
+{% endblock %}

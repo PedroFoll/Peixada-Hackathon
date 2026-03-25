@@ -86,7 +86,11 @@ def criar_categoria(request):
     else:
         messages.error(request, 'Método inválido.')
     _next = request.POST.get('_next', 'dashboard')
-    return redirect('financas:lancamentos' if _next == 'lancamentos' else 'financas:dashboard')
+    if _next == 'lancamentos':
+        return redirect('financas:lancamentos')
+    if _next == 'categorias':
+        return redirect('financas:categorias')
+    return redirect('financas:dashboard')
 
 
 class LancamentosView(LoginRequiredMixin, View):
@@ -191,5 +195,55 @@ def excluir_movimentacao(request, pk):
 @login_required
 def categorias_placeholder(request):
     return render(request, 'financas/placeholder.html', {'titulo': 'Categorias'})
+
+
+class CategoriasView(LoginRequiredMixin, View):
+    def get(self, request):
+        categorias = (
+            Categoria.objects
+            .filter(usuario=request.user)
+            .annotate(total_movimentacoes=Count('movimentacoes'))
+            .order_by('nome')
+        )
+        context = {
+            'categorias': categorias,
+            'total': categorias.count(),
+        }
+        return render(request, 'financas/categorias.html', context)
+
+
+@login_required
+def editar_categoria(request, pk):
+    cat = get_object_or_404(Categoria, pk=pk, usuario=request.user)
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST, instance=cat)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, f'Categoria "{cat.nome}" atualizada com sucesso.')
+            except Exception as e:
+                messages.error(request, f'Erro ao atualizar categoria: {e}')
+        else:
+            for erros in form.errors.values():
+                for erro in erros:
+                    messages.error(request, erro)
+    else:
+        messages.error(request, 'Método inválido.')
+    return redirect('financas:categorias')
+
+
+@login_required
+def excluir_categoria(request, pk):
+    cat = get_object_or_404(Categoria, pk=pk, usuario=request.user)
+    if request.method == 'POST':
+        try:
+            nome = cat.nome
+            cat.delete()
+            messages.success(request, f'Categoria "{nome}" excluída com sucesso.')
+        except Exception as e:
+            messages.error(request, f'Erro ao excluir categoria: {e}')
+    else:
+        messages.error(request, 'Método inválido.')
+    return redirect('financas:categorias')
 
 
