@@ -40,13 +40,9 @@
 
   <!-- Botões de ação rápida -->
   <div class="d-flex flex-wrap gap-2 mb-4" role="toolbar" aria-label="Ações rápidas">
-    <button type="button" class="btn btn-success btn-sm"
-            data-bs-toggle="modal" data-bs-target="#modalNovaReceita">
-      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Receita
-    </button>
-    <button type="button" class="btn btn-danger btn-sm"
-            data-bs-toggle="modal" data-bs-target="#modalNovaDespesa">
-      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Despesa
+    <button type="button" class="btn btn-primary btn-sm"
+            data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Movimentação
     </button>
     <button type="button" class="btn btn-outline-primary btn-sm"
             data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
@@ -237,25 +233,39 @@
     </div>
   </section>
 
-  <!-- ====== Modal Nova Receita ====== -->
-  <div class="modal fade" id="modalNovaReceita" tabindex="-1"
-       aria-labelledby="modalNovaReceitaLabel" aria-modal="true">
+  <!-- ====== Modal Novo Lançamento ====== -->
+  <div class="modal fade" id="modalNovoLancamento" tabindex="-1"
+       aria-labelledby="modalNovoLancamentoLabel" aria-modal="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="modalNovaReceitaLabel">
-            <i class="bi bi-arrow-up-circle-fill text-success me-2" aria-hidden="true"></i>Nova Receita
+          <h5 class="modal-title" id="modalNovoLancamentoLabel">
+            <i id="n-icone-tipo" class="bi bi-arrow-up-circle-fill text-success me-2" aria-hidden="true"></i>
+            <span id="n-titulo-texto">Nova Receita</span>
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <form method="post" action="{% url 'financas:criar_movimentacao' %}">
           {% csrf_token %}
-          <input type="hidden" name="tipo" value="receita">
+          <input type="hidden" name="tipo" id="n-tipo" value="receita">
           <div class="modal-body">
             <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-medium">Tipo <span class="text-danger">*</span></label>
+                <div class="btn-group w-100" role="group" aria-label="Tipo de lançamento">
+                  <input type="radio" class="btn-check" name="tipo-toggle" id="n-toggle-receita" autocomplete="off" checked>
+                  <label class="btn btn-outline-success" for="n-toggle-receita">
+                    <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>Receita
+                  </label>
+                  <input type="radio" class="btn-check" name="tipo-toggle" id="n-toggle-despesa" autocomplete="off">
+                  <label class="btn btn-outline-danger" for="n-toggle-despesa">
+                    <i class="bi bi-arrow-down-circle me-1" aria-hidden="true"></i>Despesa
+                  </label>
+                </div>
+              </div>
               <div class="col-12 col-md-6">
-                <label for="r-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
-                <select name="categoria" id="r-categoria" class="form-select" required>
+                <label for="n-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
+                <select name="categoria" id="n-categoria" class="form-select" required>
                   <option value="">Selecione uma categoria</option>
                   {% for cat in categorias %}
                   <option value="{{ cat.pk }}">{{ cat.nome }}</option>
@@ -269,33 +279,33 @@
                 {% endif %}
               </div>
               <div class="col-12 col-md-6">
-                <label for="r-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
-                <input type="number" name="valor" id="r-valor" class="form-control"
+                <label for="n-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="number" name="valor" id="n-valor" class="form-control"
                        step="0.01" min="0.01" placeholder="0,00" required>
               </div>
               <div class="col-12 col-md-6">
-                <label for="r-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
-                <input type="date" name="data" id="r-data" class="form-control" required>
+                <label for="n-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
+                <input type="date" name="data" id="n-data" class="form-control" required>
               </div>
               <div class="col-12 col-md-6">
-                <label for="r-descricao" class="form-label fw-medium">Descrição</label>
-                <input type="text" name="descricao" id="r-descricao" class="form-control"
+                <label for="n-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="n-descricao" class="form-control"
                        placeholder="Descrição (opcional)" maxlength="255">
               </div>
               <div class="col-12">
                 <div class="form-check">
-                  <input type="checkbox" name="recorrente" id="r-recorrente"
+                  <input type="checkbox" name="recorrente" id="n-recorrente"
                          class="form-check-input" value="on">
-                  <label class="form-check-label" for="r-recorrente">É recorrente?</label>
+                  <label class="form-check-label" for="n-recorrente">É recorrente?</label>
                 </div>
               </div>
-              <div id="r-campos-recorrencia" class="col-12" style="display:none;">
+              <div id="n-campos-recorrencia" class="col-12" style="display:none;">
                 <div class="card bg-light border-0">
                   <div class="card-body">
                     <div class="row g-3">
                       <div class="col-12 col-md-6">
-                        <label for="r-frequencia" class="form-label fw-medium">Frequência</label>
-                        <select name="frequencia" id="r-frequencia" class="form-select">
+                        <label for="n-frequencia" class="form-label fw-medium">Frequência</label>
+                        <select name="frequencia" id="n-frequencia" class="form-select">
                           <option value="">Selecione...</option>
                           <option value="diaria">Diária</option>
                           <option value="semanal">Semanal</option>
@@ -303,25 +313,25 @@
                         </select>
                       </div>
                       <div class="col-12 col-md-6">
-                        <label for="r-data-limite" class="form-label fw-medium">Data Limite</label>
-                        <input type="date" name="data_limite" id="r-data-limite" class="form-control">
+                        <label for="n-data-limite" class="form-label fw-medium">Data Limite</label>
+                        <input type="date" name="data_limite" id="n-data-limite" class="form-control">
                         <div class="form-text">Deixe em branco para recorrência indefinida.</div>
                       </div>
-                      <div id="r-campos-semanal" class="col-12" style="display:none;">
+                      <div id="n-campos-semanal" class="col-12" style="display:none;">
                         <label class="form-label fw-medium d-block">Dias da semana</label>
                         <div class="d-flex flex-wrap gap-3">
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="r-dia-0">Seg</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="r-dia-1">Ter</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="r-dia-2">Qua</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="r-dia-3">Qui</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="r-dia-4">Sex</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="r-dia-5">Sáb</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="r-dia-6">Dom</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="n-dia-0">Seg</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="n-dia-1">Ter</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="n-dia-2">Qua</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="n-dia-3">Qui</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="n-dia-4">Sex</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="n-dia-5">Sáb</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="n-dia-6">Dom</label></div>
                         </div>
                       </div>
-                      <div id="r-campos-mensal" class="col-12 col-md-4" style="display:none;">
-                        <label for="r-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
-                        <input type="number" name="dia_mes" id="r-dia-mes" class="form-control"
+                      <div id="n-campos-mensal" class="col-12 col-md-4" style="display:none;">
+                        <label for="n-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
+                        <input type="number" name="dia_mes" id="n-dia-mes" class="form-control"
                                min="1" max="31" placeholder="Ex: 5">
                       </div>
                     </div>
@@ -332,112 +342,9 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Receita
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====== Modal Nova Despesa ====== -->
-  <div class="modal fade" id="modalNovaDespesa" tabindex="-1"
-       aria-labelledby="modalNovaDespesaLabel" aria-modal="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalNovaDespesaLabel">
-            <i class="bi bi-arrow-down-circle-fill text-danger me-2" aria-hidden="true"></i>Nova Despesa
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <form method="post" action="{% url 'financas:criar_movimentacao' %}">
-          {% csrf_token %}
-          <input type="hidden" name="tipo" value="despesa">
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <label for="d-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
-                <select name="categoria" id="d-categoria" class="form-select" required>
-                  <option value="">Selecione uma categoria</option>
-                  {% for cat in categorias %}
-                  <option value="{{ cat.pk }}">{{ cat.nome }}</option>
-                  {% endfor %}
-                </select>
-                {% if not categorias %}
-                <div class="form-text text-warning">
-                  <i class="bi bi-exclamation-triangle me-1"></i>Nenhuma categoria cadastrada.
-                  <a href="{% url 'financas:categorias' %}" class="text-warning">Criar categoria</a>
-                </div>
-                {% endif %}
-              </div>
-              <div class="col-12 col-md-6">
-                <label for="d-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
-                <input type="number" name="valor" id="d-valor" class="form-control"
-                       step="0.01" min="0.01" placeholder="0,00" required>
-              </div>
-              <div class="col-12 col-md-6">
-                <label for="d-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
-                <input type="date" name="data" id="d-data" class="form-control" required>
-              </div>
-              <div class="col-12 col-md-6">
-                <label for="d-descricao" class="form-label fw-medium">Descrição</label>
-                <input type="text" name="descricao" id="d-descricao" class="form-control"
-                       placeholder="Descrição (opcional)" maxlength="255">
-              </div>
-              <div class="col-12">
-                <div class="form-check">
-                  <input type="checkbox" name="recorrente" id="d-recorrente"
-                         class="form-check-input" value="on">
-                  <label class="form-check-label" for="d-recorrente">É recorrente?</label>
-                </div>
-              </div>
-              <div id="d-campos-recorrencia" class="col-12" style="display:none;">
-                <div class="card bg-light border-0">
-                  <div class="card-body">
-                    <div class="row g-3">
-                      <div class="col-12 col-md-6">
-                        <label for="d-frequencia" class="form-label fw-medium">Frequência</label>
-                        <select name="frequencia" id="d-frequencia" class="form-select">
-                          <option value="">Selecione...</option>
-                          <option value="diaria">Diária</option>
-                          <option value="semanal">Semanal</option>
-                          <option value="mensal">Mensal</option>
-                        </select>
-                      </div>
-                      <div class="col-12 col-md-6">
-                        <label for="d-data-limite" class="form-label fw-medium">Data Limite</label>
-                        <input type="date" name="data_limite" id="d-data-limite" class="form-control">
-                        <div class="form-text">Deixe em branco para recorrência indefinida.</div>
-                      </div>
-                      <div id="d-campos-semanal" class="col-12" style="display:none;">
-                        <label class="form-label fw-medium d-block">Dias da semana</label>
-                        <div class="d-flex flex-wrap gap-3">
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="d-dia-0">Seg</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="d-dia-1">Ter</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="d-dia-2">Qua</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="d-dia-3">Qui</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="d-dia-4">Sex</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="d-dia-5">Sáb</label></div>
-                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="d-dia-6">Dom</label></div>
-                        </div>
-                      </div>
-                      <div id="d-campos-mensal" class="col-12 col-md-4" style="display:none;">
-                        <label for="d-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
-                        <input type="number" name="dia_mes" id="d-dia-mes" class="form-control"
-                               min="1" max="31" placeholder="Ex: 5">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger">
-              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Despesa
+            <button type="submit" id="n-btn-salvar" class="btn btn-success">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+              <span id="n-btn-texto">Salvar Receita</span>
             </button>
           </div>
         </form>

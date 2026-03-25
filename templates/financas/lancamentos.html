@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lançamentos — Peixada Finanças{% endblock %}
+
+{% block content %}
+<main class="page-content" aria-label="Lista de lançamentos">
+
+  <!-- Cabeçalho -->
+  <header class="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title mb-0">Lançamentos</h1>
+      <p class="text-muted mb-0" style="font-size:.875rem;">
+        {{ totais.total_count }} registro{{ totais.total_count|pluralize }} encontrado{{ totais.total_count|pluralize }}
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-primary btn-sm"
+              data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Movimentação
+      </button>
+    </div>
+  </header>
+
+  <!-- Filtros -->
+  <section aria-labelledby="titulo-filtros" class="mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between"
+           style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#painelFiltros"
+           aria-expanded="{% if filtros.data_inicio or filtros.data_fim or filtros.tipo or filtros.categoria or filtros.descricao %}true{% else %}false{% endif %}"
+           aria-controls="painelFiltros">
+        <h2 class="h6 mb-0 fw-semibold" id="titulo-filtros">
+          <i class="bi bi-funnel me-2 text-primary" aria-hidden="true"></i>Filtros
+          {% if filtros.data_inicio or filtros.data_fim or filtros.tipo or filtros.categoria or filtros.descricao %}
+            <span class="badge bg-primary ms-2">Ativos</span>
+          {% endif %}
+        </h2>
+        <i class="bi bi-chevron-down text-muted" aria-hidden="true"></i>
+      </div>
+      <div class="collapse {% if filtros.data_inicio or filtros.data_fim or filtros.tipo or filtros.categoria or filtros.descricao %}show{% endif %}"
+           id="painelFiltros">
+        <div class="card-body">
+          <form method="get" action="{% url 'financas:lancamentos' %}" role="search" aria-label="Filtrar lançamentos">
+            <div class="row g-3">
+              <div class="col-12 col-md-6 col-lg-3">
+                <label for="f-data-inicio" class="form-label fw-medium">Data inicial</label>
+                <input type="date" name="data_inicio" id="f-data-inicio" class="form-control"
+                       value="{{ filtros.data_inicio }}">
+              </div>
+              <div class="col-12 col-md-6 col-lg-3">
+                <label for="f-data-fim" class="form-label fw-medium">Data final</label>
+                <input type="date" name="data_fim" id="f-data-fim" class="form-control"
+                       value="{{ filtros.data_fim }}">
+              </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label for="f-tipo" class="form-label fw-medium">Tipo</label>
+                <select name="tipo" id="f-tipo" class="form-select">
+                  <option value="">Todos</option>
+                  <option value="receita" {% if filtros.tipo == 'receita' %}selected{% endif %}>Receita</option>
+                  <option value="despesa" {% if filtros.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6 col-lg-2">
+                <label for="f-categoria" class="form-label fw-medium">Categoria</label>
+                <select name="categoria" id="f-categoria" class="form-select">
+                  <option value="">Todas</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}" {% if filtros.categoria == cat.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.nome }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12 col-lg-2">
+                <label for="f-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="f-descricao" class="form-control"
+                       placeholder="Buscar..." value="{{ filtros.descricao }}">
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
+              </button>
+              <a href="{% url 'financas:lancamentos' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Limpar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resumo do período filtrado -->
+  {% if totais.total_count > 0 %}
+  <section aria-label="Totais filtrados" class="mb-3">
+    <div class="d-flex flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-2 text-success fw-semibold">
+        <i class="bi bi-arrow-up-circle-fill" aria-hidden="true"></i>
+        Receitas: R$ {{ totais.total_receitas|floatformat:2 }}
+      </div>
+      <div class="d-flex align-items-center gap-2 text-danger fw-semibold">
+        <i class="bi bi-arrow-down-circle-fill" aria-hidden="true"></i>
+        Despesas: R$ {{ totais.total_despesas|floatformat:2 }}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Tabela de lançamentos -->
+  <section aria-labelledby="titulo-tabela">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" style="width:110px;">Data</th>
+                  <th scope="col">Descrição</th>
+                  <th scope="col">Categoria</th>
+                  <th scope="col" style="width:90px;">Tipo</th>
+                  <th scope="col" class="text-end" style="width:130px;">Valor</th>
+                  <th scope="col" class="text-center" style="width:60px;" title="Recorrente">
+                    <i class="bi bi-arrow-repeat" aria-label="Recorrente"></i>
+                  </th>
+                  <th scope="col" class="text-center" style="width:100px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for mov in page_obj %}
+                <tr>
+                  <td class="text-muted" style="white-space:nowrap; font-size:.875rem;">
+                    {{ mov.data|date:"d/m/Y" }}
+                  </td>
+                  <td>
+                    <span class="text-truncate d-block" style="max-width:220px;"
+                          title="{{ mov.descricao|default:'Sem descrição' }}">
+                      {{ mov.descricao|default:"—" }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if mov.categoria %}
+                      <span class="badge rounded-pill d-inline-flex align-items-center gap-1"
+                            style="background-color:{{ mov.categoria.cor }}; color:#fff; font-size:.75rem;">
+                        <i class="bi {{ mov.categoria.icone }}" aria-hidden="true"></i>
+                        {{ mov.categoria.nome }}
+                      </span>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if mov.tipo == 'receita' %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">
+                        <i class="bi bi-arrow-up-short" aria-hidden="true"></i>Receita
+                      </span>
+                    {% else %}
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                        <i class="bi bi-arrow-down-short" aria-hidden="true"></i>Despesa
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end fw-semibold {% if mov.tipo == 'receita' %}text-success{% else %}text-danger{% endif %}"
+                      style="white-space:nowrap;">
+                    {% if mov.tipo == 'despesa' %}−{% else %}+{% endif %}
+                    R$ {{ mov.valor|floatformat:2 }}
+                  </td>
+                  <td class="text-center">
+                    {% if mov.recorrente %}
+                      <i class="bi bi-arrow-repeat text-primary" title="Recorrente — {{ mov.get_frequencia_display }}"
+                         aria-label="Movimentação recorrente {{ mov.get_frequencia_display }}"></i>
+                    {% else %}
+                      <span class="text-muted" aria-label="Não recorrente">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Ações para {{ mov.descricao|default:'lançamento' }}">
+                      <button type="button"
+                              class="btn btn-outline-primary"
+                              title="Editar"
+                              data-bs-toggle="modal"
+                              data-bs-target="#modalEditarLancamento"
+                              data-pk="{{ mov.pk }}"
+                              data-tipo="{{ mov.tipo }}"
+                              data-descricao="{{ mov.descricao|escapejs }}"
+                              data-valor="{{ mov.valor|stringformat:'.2f' }}"
+                              data-data="{{ mov.data|date:'Y-m-d' }}"
+                              data-categoria-id="{{ mov.categoria_id|default:'' }}"
+                              data-recorrente="{{ mov.recorrente|yesno:'true,false' }}"
+                              data-frequencia="{{ mov.frequencia|default:'' }}"
+                              data-dia-mes="{{ mov.dia_mes|default:'' }}"
+                              data-data-limite="{{ mov.data_limite|date:'Y-m-d'|default:'' }}"
+                              data-dias-semana="{{ mov.dias_semana|default:'' }}"
+                              aria-label="Editar lançamento">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                      </button>
+                      <button type="button"
+                              class="btn btn-outline-danger"
+                              title="Excluir"
+                              data-bs-toggle="modal"
+                              data-bs-target="#modalExcluirLancamento"
+                              data-pk="{{ mov.pk }}"
+                              data-descricao="{{ mov.descricao|default:'sem descrição'|escapejs }}"
+                              data-valor="{{ mov.valor|stringformat:'.2f' }}"
+                              data-tipo="{{ mov.tipo }}"
+                              aria-label="Excluir lançamento">
+                        <i class="bi bi-trash" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginação -->
+          {% if page_obj.has_other_pages %}
+          <nav aria-label="Paginação de lançamentos" class="p-3 border-top">
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                   aria-label="Página anterior">
+                  <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </a>
+              </li>
+              {% else %}
+              <li class="page-item disabled" aria-disabled="true">
+                <span class="page-link"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+              </li>
+              {% endif %}
+
+              {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ num }}">
+                    {{ num }}
+                  </a>
+                </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
+                   aria-label="Próxima página">
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+              </li>
+              {% else %}
+              <li class="page-item disabled" aria-disabled="true">
+                <span class="page-link"><i class="bi bi-chevron-right" aria-hidden="true"></i></span>
+              </li>
+              {% endif %}
+            </ul>
+            <p class="text-center text-muted mb-0 mt-2" style="font-size:.8rem;">
+              Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+              ({{ totais.total_count }} registro{{ totais.total_count|pluralize }})
+            </p>
+          </nav>
+          {% endif %}
+
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2" aria-hidden="true"></i>
+            <p class="mb-0">Nenhum lançamento encontrado.</p>
+            {% if filtros.data_inicio or filtros.data_fim or filtros.tipo or filtros.categoria or filtros.descricao %}
+              <a href="{% url 'financas:lancamentos' %}" class="btn btn-outline-secondary btn-sm mt-3">
+                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Limpar filtros
+              </a>
+            {% else %}
+              <button type="button" class="btn btn-primary btn-sm mt-3"
+                      data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar primeiro lançamento
+              </button>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== Modal Novo Lançamento ====== -->
+  <div class="modal fade" id="modalNovoLancamento" tabindex="-1"
+       aria-labelledby="modalNovoLancamentoLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovoLancamentoLabel">
+            <i id="n-icone-tipo" class="bi bi-arrow-up-circle-fill text-success me-2" aria-hidden="true"></i>
+            <span id="n-titulo-texto">Nova Receita</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" action="{% url 'financas:criar_movimentacao' %}">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" id="n-tipo" value="receita">
+          <input type="hidden" name="_next" value="lancamentos">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-medium">Tipo <span class="text-danger">*</span></label>
+                <div class="btn-group w-100" role="group" aria-label="Tipo de lançamento">
+                  <input type="radio" class="btn-check" name="tipo-toggle" id="n-toggle-receita" autocomplete="off" checked>
+                  <label class="btn btn-outline-success" for="n-toggle-receita">
+                    <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>Receita
+                  </label>
+                  <input type="radio" class="btn-check" name="tipo-toggle" id="n-toggle-despesa" autocomplete="off">
+                  <label class="btn btn-outline-danger" for="n-toggle-despesa">
+                    <i class="bi bi-arrow-down-circle me-1" aria-hidden="true"></i>Despesa
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
+                <select name="categoria" id="n-categoria" class="form-select" required>
+                  <option value="">Selecione uma categoria</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}">{{ cat.nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="number" name="valor" id="n-valor" class="form-control"
+                       step="0.01" min="0.01" placeholder="0,00" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
+                <input type="date" name="data" id="n-data" class="form-control" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="n-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="n-descricao" class="form-control"
+                       placeholder="Descrição (opcional)" maxlength="255">
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" name="recorrente" id="n-recorrente"
+                         class="form-check-input" value="on">
+                  <label class="form-check-label" for="n-recorrente">É recorrente?</label>
+                </div>
+              </div>
+              <div id="n-campos-recorrencia" class="col-12" style="display:none;">
+                <div class="card bg-light border-0">
+                  <div class="card-body">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label for="n-frequencia" class="form-label fw-medium">Frequência</label>
+                        <select name="frequencia" id="n-frequencia" class="form-select">
+                          <option value="">Selecione...</option>
+                          <option value="diaria">Diária</option>
+                          <option value="semanal">Semanal</option>
+                          <option value="mensal">Mensal</option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label for="n-data-limite" class="form-label fw-medium">Data Limite</label>
+                        <input type="date" name="data_limite" id="n-data-limite" class="form-control">
+                        <div class="form-text">Deixe em branco para recorrência indefinida.</div>
+                      </div>
+                      <div id="n-campos-semanal" class="col-12" style="display:none;">
+                        <label class="form-label fw-medium d-block">Dias da semana</label>
+                        <div class="d-flex flex-wrap gap-3">
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="n-dia-0">Seg</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="n-dia-1">Ter</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="n-dia-2">Qua</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="n-dia-3">Qui</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="n-dia-4">Sex</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="n-dia-5">Sáb</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="n-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="n-dia-6">Dom</label></div>
+                        </div>
+                      </div>
+                      <div id="n-campos-mensal" class="col-12 col-md-4" style="display:none;">
+                        <label for="n-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
+                        <input type="number" name="dia_mes" id="n-dia-mes" class="form-control"
+                               min="1" max="31" placeholder="Ex: 5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="n-btn-salvar" class="btn btn-success">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+              <span id="n-btn-texto">Salvar Receita</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modal Editar Lançamento ====== -->
+  <div class="modal fade" id="modalEditarLancamento" tabindex="-1"
+       aria-labelledby="modalEditarLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarLabel">
+            <i id="e-icone-tipo" class="bi bi-pencil-fill text-primary me-2" aria-hidden="true"></i>
+            <span id="e-titulo-texto">Editar Lançamento</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form id="form-editar"
+              method="post"
+              data-action-base="{% url 'financas:editar_movimentacao' pk=0 %}">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" id="e-tipo">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="e-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
+                <select name="categoria" id="e-categoria" class="form-select" required>
+                  <option value="">Selecione uma categoria</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}">{{ cat.nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="e-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="number" name="valor" id="e-valor" class="form-control"
+                       step="0.01" min="0.01" placeholder="0,00" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="e-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
+                <input type="date" name="data" id="e-data" class="form-control" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="e-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="e-descricao" class="form-control"
+                       placeholder="Descrição (opcional)" maxlength="255">
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" name="recorrente" id="e-recorrente"
+                         class="form-check-input" value="on">
+                  <label class="form-check-label" for="e-recorrente">É recorrente?</label>
+                </div>
+              </div>
+              <div id="e-campos-recorrencia" class="col-12" style="display:none;">
+                <div class="card bg-light border-0">
+                  <div class="card-body">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label for="e-frequencia" class="form-label fw-medium">Frequência</label>
+                        <select name="frequencia" id="e-frequencia" class="form-select">
+                          <option value="">Selecione...</option>
+                          <option value="diaria">Diária</option>
+                          <option value="semanal">Semanal</option>
+                          <option value="mensal">Mensal</option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label for="e-data-limite" class="form-label fw-medium">Data Limite</label>
+                        <input type="date" name="data_limite" id="e-data-limite" class="form-control">
+                        <div class="form-text">Deixe em branco para recorrência indefinida.</div>
+                      </div>
+                      <div id="e-campos-semanal" class="col-12" style="display:none;">
+                        <label class="form-label fw-medium d-block">Dias da semana</label>
+                        <div class="d-flex flex-wrap gap-3">
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="e-dia-0">Seg</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="e-dia-1">Ter</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="e-dia-2">Qua</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="e-dia-3">Qui</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="e-dia-4">Sex</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="e-dia-5">Sáb</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="e-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="e-dia-6">Dom</label></div>
+                        </div>
+                      </div>
+                      <div id="e-campos-mensal" class="col-12 col-md-4" style="display:none;">
+                        <label for="e-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
+                        <input type="number" name="dia_mes" id="e-dia-mes" class="form-control"
+                               min="1" max="31" placeholder="Ex: 5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="e-btn-salvar" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modal Confirmar Exclusão ====== -->
+  <div class="modal fade" id="modalExcluirLancamento" tabindex="-1"
+       aria-labelledby="modalExcluirLabel" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalExcluirLabel">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2" aria-hidden="true"></i>Confirmar Exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja excluir este lançamento?</p>
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Descrição</dt>
+            <dd class="col-sm-8" id="excluir-descricao">—</dd>
+            <dt class="col-sm-4">Valor</dt>
+            <dd class="col-sm-8 fw-semibold" id="excluir-valor">—</dd>
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8" id="excluir-tipo">—</dd>
+          </dl>
+          <p class="text-danger mb-0 mt-3">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            Esta ação não pode ser desfeita.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <form id="form-excluir"
+                method="post"
+                data-action-base="{% url 'financas:excluir_movimentacao' pk=0 %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash me-1" aria-hidden="true"></i>Excluir
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/lancamentos.js' %}"></script>
+{% endblock %}

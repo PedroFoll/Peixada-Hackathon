@@ -98,3 +98,24 @@ def get_ultimas_movimentacoes(usuario, limite=8):
         .select_related('categoria')
         .order_by('-data', '-criado_em')[:limite]
     )
+
+
+def get_movimentacoes_filtradas(usuario, data_inicio=None, data_fim=None,
+                                tipo=None, categoria_id=None, descricao=None):
+    """Retorna movimentações do usuário com filtros opcionais aplicados."""
+    qs = (
+        Movimentacao.objects
+        .filter(usuario=usuario)
+        .select_related('categoria')
+    )
+    if data_inicio:
+        qs = qs.filter(data__gte=data_inicio)
+    if data_fim:
+        qs = qs.filter(data__lte=data_fim)
+    if tipo in ('receita', 'despesa'):
+        qs = qs.filter(tipo=tipo)
+    if categoria_id:
+        qs = qs.filter(categoria_id=categoria_id)
+    if descricao:
+        qs = qs.filter(descricao__icontains=descricao)
+    return qs.order_by('-data', '-criado_em')

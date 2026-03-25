@@ -108,44 +108,63 @@ document.addEventListener('DOMContentLoaded', () => {
   criarDonut('graficoReceitasCat', CORES_RECEITA);
   criarDonut('graficoDespesasCat', CORES_DESPESA);
 
-  // === Modais de movimentação ===
-  function configurarModalMovimentacao(prefixo, modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
+  // === Modal Novo Lançamento (unificado) ===
+  const modalNovo = document.getElementById('modalNovoLancamento');
+  if (modalNovo) {
+    function aplicarTipoNovo(tipo) {
+      const icone     = document.getElementById('n-icone-tipo');
+      const titulo    = document.getElementById('n-titulo-texto');
+      const btnSalvar = document.getElementById('n-btn-salvar');
+      const btnTexto  = document.getElementById('n-btn-texto');
+      document.getElementById('n-tipo').value = tipo;
+      if (tipo === 'receita') {
+        icone.className    = 'bi bi-arrow-up-circle-fill text-success me-2';
+        titulo.textContent = 'Nova Receita';
+        btnSalvar.className = 'btn btn-success';
+        btnTexto.textContent = 'Salvar Receita';
+        document.getElementById('n-toggle-receita').checked = true;
+      } else {
+        icone.className    = 'bi bi-arrow-down-circle-fill text-danger me-2';
+        titulo.textContent = 'Nova Despesa';
+        btnSalvar.className = 'btn btn-danger';
+        btnTexto.textContent = 'Salvar Despesa';
+        document.getElementById('n-toggle-despesa').checked = true;
+      }
+    }
 
-    const inputData        = document.getElementById(`${prefixo}-data`);
-    const checkRecorrente  = document.getElementById(`${prefixo}-recorrente`);
-    const camposRec        = document.getElementById(`${prefixo}-campos-recorrencia`);
-    const selectFrequencia = document.getElementById(`${prefixo}-frequencia`);
-    const camposSemanal    = document.getElementById(`${prefixo}-campos-semanal`);
-    const camposMensal     = document.getElementById(`${prefixo}-campos-mensal`);
-
-    modal.addEventListener('show.bs.modal', () => {
+    modalNovo.addEventListener('show.bs.modal', (event) => {
+      const tipo = event.relatedTarget?.dataset?.tipo || 'receita';
+      aplicarTipoNovo(tipo);
+      const inputData = document.getElementById('n-data');
       if (inputData && !inputData.value) {
         inputData.value = new Date().toISOString().split('T')[0];
       }
     });
 
-    if (!checkRecorrente) return;
+    modalNovo.addEventListener('hidden.bs.modal', () => {
+      modalNovo.querySelector('form')?.reset();
+      document.getElementById('n-campos-recorrencia').style.display = 'none';
+      document.getElementById('n-campos-semanal').style.display = 'none';
+      document.getElementById('n-campos-mensal').style.display = 'none';
+    });
 
-    checkRecorrente.addEventListener('change', () => {
-      const ativo = checkRecorrente.checked;
-      camposRec.style.display = ativo ? 'block' : 'none';
-      if (!ativo) {
-        selectFrequencia.value = '';
-        camposSemanal.style.display = 'none';
-        camposMensal.style.display = 'none';
+    document.getElementById('n-toggle-receita')?.addEventListener('change', () => aplicarTipoNovo('receita'));
+    document.getElementById('n-toggle-despesa')?.addEventListener('change', () => aplicarTipoNovo('despesa'));
+
+    document.getElementById('n-recorrente')?.addEventListener('change', (e) => {
+      document.getElementById('n-campos-recorrencia').style.display = e.target.checked ? 'block' : 'none';
+      if (!e.target.checked) {
+        document.getElementById('n-frequencia').value = '';
+        document.getElementById('n-campos-semanal').style.display = 'none';
+        document.getElementById('n-campos-mensal').style.display = 'none';
       }
     });
 
-    selectFrequencia.addEventListener('change', () => {
-      camposSemanal.style.display = selectFrequencia.value === 'semanal' ? 'block' : 'none';
-      camposMensal.style.display  = selectFrequencia.value === 'mensal'  ? 'block' : 'none';
+    document.getElementById('n-frequencia')?.addEventListener('change', (e) => {
+      document.getElementById('n-campos-semanal').style.display = (e.target.value === 'semanal') ? 'block' : 'none';
+      document.getElementById('n-campos-mensal').style.display  = (e.target.value === 'mensal')  ? 'block' : 'none';
     });
   }
-
-  configurarModalMovimentacao('r', 'modalNovaReceita');
-  configurarModalMovimentacao('d', 'modalNovaDespesa');
 
   // === Preview de ícone no modal de categoria ===
   const selectIcone = document.getElementById('cat-icone');

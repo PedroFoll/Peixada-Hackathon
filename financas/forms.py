@@ -58,6 +58,10 @@ class MovimentacaoForm(forms.ModelForm):
             self.fields['categoria'].queryset = Categoria.objects.none()
         self.fields['categoria'].empty_label = 'Selecione uma categoria'
         self.fields['frequencia'].required = False
+        # Pre-fill dias_semana for edit forms (model stores as "0,2,4" string)
+        instance = kwargs.get('instance')
+        if instance and instance.dias_semana:
+            self.fields['dias_semana'].initial = instance.dias_semana.split(',')
 
     def clean_dias_semana(self):
         dias = self.cleaned_data.get('dias_semana') or []

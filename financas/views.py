@@ -1,14 +1,18 @@
 import json
+from datetime import date
+from decimal import Decimal
 
-from django.shortcuts import redirect, render
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Q, Sum
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
 from . import services
 from .forms import CategoriaForm, MovimentacaoForm
-from .models import Categoria
+from .models import Categoria, Movimentacao
 
 
 class DashboardView(LoginRequiredMixin, View):
@@ -59,7 +63,8 @@ def criar_movimentacao(request):
                     messages.error(request, erro)
     else:
         messages.error(request, 'Método inválido.')
-    return redirect('financas:dashboard')
+    _next = request.POST.get('_next', 'dashboard')
+    return redirect('financas:lancamentos' if _next == 'lancamentos' else 'financas:dashboard')
 
 
 @login_required
@@ -80,12 +85,107 @@ def criar_categoria(request):
                     messages.error(request, erro)
     else:
         messages.error(request, 'Método inválido.')
-    return redirect('financas:dashboard')
+    _next = request.POST.get('_next', 'dashboard')
+    return redirect('financas:lancamentos' if _next == 'lancamentos' else 'financas:dashboard')
+
+
+class LancamentosView(LoginRequiredMixin, View):
+    def get(self, request):
+        data_inicio_str = request.GET.get('data_inicio', '')
+        data_fim_str = request.GET.get('data_fim', '')
+        tipo = request.GET.get('tipo', '')
+        categoria_id = request.GET.get('categoria', '')
+        descricao = request.GET.get('descricao', '')
+
+        data_inicio = None
+        data_fim = None
+        try:
+            if data_inicio_str:
+                data_inicio = date.fromisoformat(data_inicio_str)
+        except ValueError:
+            data_inicio_str = ''
+        try:
+            if data_fim_str:
+                data_fim = date.fromisoformat(data_fim_str)
+        except ValueError:
+            data_fim_str = ''
+
+        qs = services.get_movimentacoes_filtradas(
+            usuario=request.user,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            tipo=tipo or None,
+            categoria_id=categoria_id or None,
+            descricao=descricao or None,
+        )
+
+        totais = qs.aggregate(
+            total_receitas=Sum('valor', filter=Q(tipo='receita'), default=Decimal('0')),
+            total_despesas=Sum('valor', filter=Q(tipo='despesa'), default=Decimal('0')),
+            total_count=Count('id'),
+        )
+
+        categorias = Categoria.objects.filter(usuario=request.user)
+
+        paginator = Paginator(qs, 20)
+        page = request.GET.get('page', 1)
+        try:
+            page_obj = paginator.page(page)
+        except (PageNotAnInteger, EmptyPage):
+            page_obj = paginator.page(1)
+
+        query_params = request.GET.copy()
+        query_params.pop('page', None)
+
+        context = {
+            'page_obj': page_obj,
+            'categorias': categorias,
+            'filtros': {
+                'data_inicio': data_inicio_str,
+                'data_fim': data_fim_str,
+                'tipo': tipo,
+                'categoria': categoria_id,
+                'descricao': descricao,
+            },
+            'query_string': query_params.urlencode(),
+            'totais': totais,
+        }
+        return render(request, 'financas/lancamentos.html', context)
 
 
 @login_required
-def lancamentos_placeholder(request):
-    return render(request, 'financas/placeholder.html', {'titulo': 'Lançamentos'})
+def editar_movimentacao(request, pk):
+    mov = get_object_or_404(Movimentacao, pk=pk, usuario=request.user)
+    if request.method == 'POST':
+        form = MovimentacaoForm(request.POST, instance=mov, usuario=request.user)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Movimentação atualizada com sucesso.')
+            except Exception as e:
+                messages.error(request, f'Erro ao atualizar movimentação: {e}')
+        else:
+            for erros in form.errors.values():
+                for erro in erros:
+                    messages.error(request, erro)
+    else:
+        messages.error(request, 'Método inválido.')
+    return redirect('financas:lancamentos')
+
+
+@login_required
+def excluir_movimentacao(request, pk):
+    mov = get_object_or_404(Movimentacao, pk=pk, usuario=request.user)
+    if request.method == 'POST':
+        try:
+            desc = mov.descricao or 'sem descrição'
+            mov.delete()
+            messages.success(request, f'Movimentação "{desc}" excluída com sucesso.')
+        except Exception as e:
+            messages.error(request, f'Erro ao excluir movimentação: {e}')
+    else:
+        messages.error(request, 'Método inválido.')
+    return redirect('financas:lancamentos')
 
 
 @login_required
