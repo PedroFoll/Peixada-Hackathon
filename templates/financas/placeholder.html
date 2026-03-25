@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Peixada Finanças{% endblock %}
+{% block content %}
+<main class="page-content">
+  <h1 class="page-title mb-4">{{ titulo }}</h1>
+  <p class="text-muted">Em construção...</p>
+  <a href="{% url 'financas:dashboard' %}" class="btn btn-outline-primary btn-sm">
+    ← Voltar ao Dashboard
+  </a>
+</main>
+{% endblock %}

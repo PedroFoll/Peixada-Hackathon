@@ -1,8 +1,230 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Dashboard — Peixada Finanças{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
 {% block content %}
-<main class="container py-5">
-  <h1>Dashboard</h1>
-  <p class="text-muted">Em construção...</p>
+<main class="page-content" aria-label="Dashboard financeiro">
+
+  <!-- Cabeçalho da página -->
+  <header class="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title mb-0">Dashboard</h1>
+      <p class="text-muted mb-0" style="font-size:.875rem;">
+        {{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}
+      </p>
+    </div>
+
+    <!-- Filtros de período -->
+    <nav aria-label="Filtros de período">
+      <div class="btn-group" role="group" aria-label="Selecionar período">
+        <a href="?periodo=semanal"
+           class="btn btn-sm {% if filtro == 'semanal' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          Semana
+        </a>
+        <a href="?periodo=mensal"
+           class="btn btn-sm {% if filtro == 'mensal' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          Mês
+        </a>
+        <a href="?periodo=anual"
+           class="btn btn-sm {% if filtro == 'anual' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          Ano
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Cards de resumo -->
+  <section aria-labelledby="titulo-resumo" class="mb-4">
+    <h2 class="visually-hidden" id="titulo-resumo">Resumo financeiro</h2>
+    <div class="row g-3">
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="summary-card summary-card--saldo h-100" aria-label="Saldo do período">
+          <div class="summary-card__icon">
+            <i class="bi bi-wallet2" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="summary-card__label">Saldo</p>
+            <p class="summary-card__value {% if totais.saldo >= 0 %}text-success{% else %}text-danger{% endif %}">
+              R$ {{ totais.saldo|floatformat:2 }}
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="summary-card h-100" aria-label="Total de receitas">
+          <div class="summary-card__icon summary-card__icon--receita">
+            <i class="bi bi-arrow-up-circle" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="summary-card__label">Receitas</p>
+            <p class="summary-card__value text-success">
+              R$ {{ totais.total_receitas|floatformat:2 }}
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="summary-card h-100" aria-label="Total de despesas">
+          <div class="summary-card__icon summary-card__icon--despesa">
+            <i class="bi bi-arrow-down-circle" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="summary-card__label">Despesas</p>
+            <p class="summary-card__value text-danger">
+              R$ {{ totais.total_despesas|floatformat:2 }}
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <article class="summary-card h-100" aria-label="Transações recentes">
+          <div class="summary-card__icon summary-card__icon--neutro">
+            <i class="bi bi-receipt" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="summary-card__label">Lançamentos</p>
+            <p class="summary-card__value">{{ ultimas_movimentacoes|length }}</p>
+          </div>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Gráficos principais -->
+  <section aria-labelledby="titulo-graficos" class="mb-4">
+    <h2 class="visually-hidden" id="titulo-graficos">Gráficos</h2>
+    <div class="row g-3">
+
+      <!-- Gráfico Receitas × Despesas -->
+      <div class="col-12 col-lg-7">
+        <div class="chart-card h-100">
+          <h3 class="chart-card__title">Receitas × Despesas</h3>
+          <div class="chart-card__body">
+            <canvas id="graficoComparacao"
+                    data-comparacao="{{ comparacao_json }}"
+                    role="img"
+                    aria-label="Gráfico de barras comparando receitas e despesas por mês">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos de categorias -->
+      <div class="col-12 col-lg-5">
+        <div class="row g-3 h-100">
+
+          <div class="col-12 col-sm-6 col-lg-12">
+            <div class="chart-card h-100">
+              <h3 class="chart-card__title text-success">Receitas por Categoria</h3>
+              <div class="chart-card__body chart-card__body--donut">
+                <canvas id="graficoReceitasCat"
+                        data-dados="{{ receitas_cat_json }}"
+                        role="img"
+                        aria-label="Gráfico donut de receitas por categoria">
+                </canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-lg-12">
+            <div class="chart-card h-100">
+              <h3 class="chart-card__title text-danger">Despesas por Categoria</h3>
+              <div class="chart-card__body chart-card__body--donut">
+                <canvas id="graficoDespesasCat"
+                        data-dados="{{ despesas_cat_json }}"
+                        role="img"
+                        aria-label="Gráfico donut de despesas por categoria">
+                </canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Últimos lançamentos -->
+  <section aria-labelledby="titulo-lancamentos">
+    <div class="chart-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="chart-card__title mb-0" id="titulo-lancamentos">
+          Últimos Lançamentos
+        </h3>
+        <a href="{% url 'financas:lancamentos' %}" class="btn btn-sm btn-outline-primary">
+          Ver todos <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      {% if ultimas_movimentacoes %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Descrição</th>
+                <th scope="col">Categoria</th>
+                <th scope="col" class="text-end">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mov in ultimas_movimentacoes %}
+              <tr>
+                <td class="text-muted" style="white-space:nowrap;">
+                  {{ mov.data|date:"d/m/Y" }}
+                </td>
+                <td>
+                  {{ mov.descricao|default:"—" }}
+                  {% if mov.recorrente %}
+                    <i class="bi bi-arrow-repeat text-muted ms-1" title="Recorrente" aria-label="Recorrente"></i>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if mov.categoria %}
+                    <span class="badge rounded-pill"
+                          style="background-color: {{ mov.categoria.cor }}; color:#fff;">
+                      {{ mov.categoria.nome }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-end fw-semibold {% if mov.tipo == 'receita' %}text-success{% else %}text-danger{% endif %}">
+                  {% if mov.tipo == 'despesa' %}−{% else %}+{% endif %}
+                  R$ {{ mov.valor|floatformat:2 }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-inbox fs-1 d-block mb-2" aria-hidden="true"></i>
+          <p class="mb-0">Nenhum lançamento no período selecionado.</p>
+          <a href="{% url 'financas:lancamentos' %}" class="btn btn-primary btn-sm mt-3">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar lançamento
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
 </main>
 {% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
+

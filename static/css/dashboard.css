@@ -1,0 +1,10 @@
+/* dashboard.css — estilos específicos da página de dashboard */
+.page-header {
+  padding-top: .25rem;
+}
+
+@media (max-width: 575.98px) {
+  .summary-card__value {
+    font-size: 1.1rem;
+  }
+}
