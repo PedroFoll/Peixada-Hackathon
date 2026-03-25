@@ -108,6 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
   criarDonut('graficoReceitasCat', CORES_RECEITA);
   criarDonut('graficoDespesasCat', CORES_DESPESA);
 
+  // === Máscara monetária no campo de valor ===
+  aplicarMascaraMonetaria(
+    document.getElementById('n-valor-display'),
+    document.getElementById('n-valor')
+  );
+
   // === Modal Novo Lançamento (unificado) ===
   const modalNovo = document.getElementById('modalNovoLancamento');
   if (modalNovo) {
@@ -143,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalNovo.addEventListener('hidden.bs.modal', () => {
       modalNovo.querySelector('form')?.reset();
+      document.getElementById('n-valor').value = '';
+      document.getElementById('n-valor-display').value = '';
       document.getElementById('n-campos-recorrencia').style.display = 'none';
       document.getElementById('n-campos-semanal').style.display = 'none';
       document.getElementById('n-campos-mensal').style.display = 'none';

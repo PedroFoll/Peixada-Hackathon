@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const fmtBRL = (val) =>
     'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // ── Máscara monetária nos campos de valor ─────────────────────────────
+  aplicarMascaraMonetaria(
+    document.getElementById('n-valor-display'),
+    document.getElementById('n-valor')
+  );
+  aplicarMascaraMonetaria(
+    document.getElementById('e-valor-display'),
+    document.getElementById('e-valor')
+  );
+
   // ── Edit modal ────────────────────────────────────────────────
   const modalEditar = document.getElementById('modalEditarLancamento');
   if (modalEditar) {
@@ -41,7 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Basic fields
       document.getElementById('e-tipo').value      = tipo;
       document.getElementById('e-categoria').value = catId;
-      document.getElementById('e-valor').value     = valor;
+      setValorMascaraMonetaria(
+        document.getElementById('e-valor-display'),
+        document.getElementById('e-valor'),
+        valor
+      );
       document.getElementById('e-data').value      = dataVal;
       document.getElementById('e-descricao').value = descr;
 

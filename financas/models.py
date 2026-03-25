@@ -42,6 +42,10 @@ class Movimentacao(models.Model):
     dias_semana = models.CharField(max_length=20, null=True, blank=True)
     dia_mes = models.PositiveSmallIntegerField(null=True, blank=True)
     data_limite = models.DateField(null=True, blank=True)
+    movimentacao_origem = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='ocorrencias',
+    )
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:

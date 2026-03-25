@@ -17,6 +17,9 @@ from .models import Categoria, Movimentacao
 
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request):
+        # Gerar ocorrências pendentes de movimentações recorrentes
+        services.processar_recorrencias_usuario(request.user)
+
         filtro = request.GET.get('periodo', 'mensal')
 
         if filtro == 'personalizado':
@@ -116,6 +119,9 @@ def criar_categoria(request):
 
 class LancamentosView(LoginRequiredMixin, View):
     def get(self, request):
+        # Gerar ocorrências pendentes de movimentações recorrentes
+        services.processar_recorrencias_usuario(request.user)
+
         data_inicio_str = request.GET.get('data_inicio', '')
         data_fim_str = request.GET.get('data_fim', '')
         tipo = request.GET.get('tipo', '')

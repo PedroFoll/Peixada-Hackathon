@@ -21,17 +21,22 @@ def get_periodo(filtro):
 
 def gerar_movimentacoes_recorrentes(movimentacao):
     """
-    A partir de uma movimentação marcada como recorrente, gera todas as
-    ocorrências futuras até a data_limite (ou até 1 ano à frente se
-    data_limite não estiver definida).
+    A partir de uma movimentação marcada como recorrente, gera as
+    ocorrências pendentes até a data atual (nunca no futuro).
+
+    Verifica quais datas já foram geradas (via movimentacao_origem)
+    e cria apenas as faltantes.
 
     Retorna a quantidade de movimentações criadas.
     """
     if not movimentacao.recorrente or not movimentacao.frequencia:
         return 0
 
+    hoje = date.today()
     data_inicio = movimentacao.data
     data_limite = movimentacao.data_limite or (data_inicio + timedelta(days=365))
+    # Nunca gerar ocorrências com data após hoje
+    data_limite = min(data_limite, hoje)
 
     datas = _calcular_datas_recorrentes(
         frequencia=movimentacao.frequencia,
@@ -41,22 +46,48 @@ def gerar_movimentacoes_recorrentes(movimentacao):
         dia_mes=movimentacao.dia_mes,
     )
 
+    if not datas:
+        return 0
+
+    # Buscar datas já geradas para esta movimentação recorrente
+    datas_existentes = set(
+        movimentacao.ocorrencias.values_list('data', flat=True)
+    )
+
     novas = []
     for dt in datas:
-        novas.append(Movimentacao(
-            usuario=movimentacao.usuario,
-            categoria=movimentacao.categoria,
-            descricao=movimentacao.descricao,
-            valor=movimentacao.valor,
-            tipo=movimentacao.tipo,
-            data=dt,
-            recorrente=False,
-        ))
+        if dt not in datas_existentes:
+            novas.append(Movimentacao(
+                usuario=movimentacao.usuario,
+                categoria=movimentacao.categoria,
+                descricao=movimentacao.descricao,
+                valor=movimentacao.valor,
+                tipo=movimentacao.tipo,
+                data=dt,
+                recorrente=False,
+                movimentacao_origem=movimentacao,
+            ))
 
     if novas:
         Movimentacao.objects.bulk_create(novas)
 
     return len(novas)
+
+
+def processar_recorrencias_usuario(usuario):
+    """
+    Processa todas as movimentações recorrentes de um usuário,
+    gerando ocorrências pendentes até a data atual.
+    """
+    recorrentes = (
+        Movimentacao.objects
+        .filter(usuario=usuario, recorrente=True)
+        .select_related('categoria')
+    )
+    total = 0
+    for mov in recorrentes:
+        total += gerar_movimentacoes_recorrentes(mov)
+    return total
 
 
 def _calcular_datas_recorrentes(frequencia, data_inicio, data_limite,

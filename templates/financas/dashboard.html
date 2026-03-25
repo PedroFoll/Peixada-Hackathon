@@ -310,9 +310,10 @@
                 {% endif %}
               </div>
               <div class="col-12 col-md-6">
-                <label for="n-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
-                <input type="number" name="valor" id="n-valor" class="form-control"
-                       step="0.01" min="0.01" placeholder="0,00" required>
+                <label for="n-valor-display" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="text" id="n-valor-display" class="form-control"
+                       inputmode="decimal" placeholder="0,00" required>
+                <input type="hidden" name="valor" id="n-valor">
               </div>
               <div class="col-12 col-md-6">
                 <label for="n-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
