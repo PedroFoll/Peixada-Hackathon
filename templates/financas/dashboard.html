@@ -11,17 +11,31 @@
 <main class="page-content" aria-label="Dashboard financeiro">
 
   <!-- Cabeçalho da página -->
-  <header class="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
-    <div>
-      <h1 class="page-title mb-0">Dashboard</h1>
-      <p class="text-muted mb-0" style="font-size:.875rem;">
-        {{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}
-      </p>
+  <header class="page-header mb-4">
+
+    <!-- Linha 1: Título + botões de ação -->
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-3">
+      <div>
+        <h1 class="page-title mb-0">Dashboard</h1>
+        <p class="text-muted mb-0" style="font-size:.875rem;">
+          {{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}
+        </p>
+      </div>
+      <div class="d-flex flex-wrap gap-2" role="toolbar" aria-label="Ações rápidas">
+        <button type="button" class="btn btn-primary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
+          <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Movimentação
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
+          <i class="bi bi-tags me-1" aria-hidden="true"></i>Nova Categoria
+        </button>
+      </div>
     </div>
 
-    <!-- Filtros de período -->
-    <nav aria-label="Filtros de período">
-      <div class="btn-group" role="group" aria-label="Selecionar período">
+    <!-- Linha 2: Filtros de período -->
+    <div class="d-flex flex-wrap align-items-center gap-2" role="navigation" aria-label="Filtros de período">
+      <div class="btn-group" role="group" aria-label="Selecionar período predefinido">
         <a href="?periodo=semanal"
            class="btn btn-sm {% if filtro == 'semanal' %}btn-primary{% else %}btn-outline-primary{% endif %}">
           Semana
@@ -35,20 +49,37 @@
           Ano
         </a>
       </div>
-    </nav>
-  </header>
 
-  <!-- Botões de ação rápida -->
-  <div class="d-flex flex-wrap gap-2 mb-4" role="toolbar" aria-label="Ações rápidas">
-    <button type="button" class="btn btn-primary btn-sm"
-            data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
-      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Movimentação
-    </button>
-    <button type="button" class="btn btn-outline-primary btn-sm"
-            data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
-      <i class="bi bi-tags me-1" aria-hidden="true"></i>Nova Categoria
-    </button>
-  </div>
+      <button type="button" id="btn-filtro-personalizado"
+              class="btn btn-sm {% if filtro == 'personalizado' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+              aria-expanded="{% if filtro == 'personalizado' %}true{% else %}false{% endif %}"
+              aria-controls="form-personalizado">
+        <i class="bi bi-calendar-range me-1" aria-hidden="true"></i>Personalizado
+      </button>
+
+      <form id="form-personalizado" method="get" action=""
+            class="d-flex flex-wrap align-items-center gap-2{% if filtro != 'personalizado' %} d-none{% endif %}"
+            aria-label="Filtro por período personalizado">
+        <input type="hidden" name="periodo" value="personalizado">
+        <div class="d-flex align-items-center gap-1">
+          <label for="di-data-inicio" class="text-muted small mb-0 text-nowrap">De</label>
+          <input type="date" id="di-data-inicio" name="data_inicio"
+                 class="form-control form-control-sm filtro-data"
+                 value="{{ data_inicio|date:'Y-m-d' }}" required>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+          <label for="di-data-fim" class="text-muted small mb-0 text-nowrap">até</label>
+          <input type="date" id="di-data-fim" name="data_fim"
+                 class="form-control form-control-sm filtro-data"
+                 value="{{ data_fim|date:'Y-m-d' }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search me-1" aria-hidden="true"></i>Aplicar
+        </button>
+      </form>
+    </div>
+
+  </header>
 
   <!-- Cards de resumo -->
   <section aria-labelledby="titulo-resumo" class="mb-4">

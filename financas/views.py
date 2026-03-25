@@ -18,7 +18,20 @@ from .models import Categoria, Movimentacao
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request):
         filtro = request.GET.get('periodo', 'mensal')
-        data_inicio, data_fim = services.get_periodo(filtro)
+
+        if filtro == 'personalizado':
+            data_inicio_str = request.GET.get('data_inicio', '')
+            data_fim_str = request.GET.get('data_fim', '')
+            try:
+                data_inicio = date.fromisoformat(data_inicio_str)
+                data_fim = date.fromisoformat(data_fim_str)
+                if data_inicio > data_fim:
+                    raise ValueError('data_inicio posterior a data_fim')
+            except (ValueError, TypeError):
+                data_inicio, data_fim = services.get_periodo('mensal')
+                filtro = 'mensal'
+        else:
+            data_inicio, data_fim = services.get_periodo(filtro)
 
         totais = services.calcular_totais(request.user, data_inicio, data_fim)
         comparacao = services.get_dados_comparacao_mensal(request.user, data_inicio, data_fim)

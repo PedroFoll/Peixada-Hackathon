@@ -174,4 +174,20 @@ document.addEventListener('DOMContentLoaded', () => {
       previewIcone.className = `bi ${selectIcone.value}`;
     });
   }
+
+  // === Toggle filtro por data personalizada ===
+  const btnPersonalizado  = document.getElementById('btn-filtro-personalizado');
+  const formPersonalizado = document.getElementById('form-personalizado');
+  if (btnPersonalizado && formPersonalizado) {
+    btnPersonalizado.addEventListener('click', () => {
+      const estaOculto = formPersonalizado.classList.contains('d-none');
+      formPersonalizado.classList.toggle('d-none', !estaOculto);
+      btnPersonalizado.classList.toggle('btn-primary', estaOculto);
+      btnPersonalizado.classList.toggle('btn-outline-secondary', !estaOculto);
+      btnPersonalizado.setAttribute('aria-expanded', String(estaOculto));
+      if (estaOculto) {
+        document.getElementById('di-data-inicio')?.focus();
+      }
+    });
+  }
 });
