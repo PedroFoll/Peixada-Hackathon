@@ -107,4 +107,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   criarDonut('graficoReceitasCat', CORES_RECEITA);
   criarDonut('graficoDespesasCat', CORES_DESPESA);
+
+  // === Modais de movimentação ===
+  function configurarModalMovimentacao(prefixo, modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    const inputData        = document.getElementById(`${prefixo}-data`);
+    const checkRecorrente  = document.getElementById(`${prefixo}-recorrente`);
+    const camposRec        = document.getElementById(`${prefixo}-campos-recorrencia`);
+    const selectFrequencia = document.getElementById(`${prefixo}-frequencia`);
+    const camposSemanal    = document.getElementById(`${prefixo}-campos-semanal`);
+    const camposMensal     = document.getElementById(`${prefixo}-campos-mensal`);
+
+    modal.addEventListener('show.bs.modal', () => {
+      if (inputData && !inputData.value) {
+        inputData.value = new Date().toISOString().split('T')[0];
+      }
+    });
+
+    if (!checkRecorrente) return;
+
+    checkRecorrente.addEventListener('change', () => {
+      const ativo = checkRecorrente.checked;
+      camposRec.style.display = ativo ? 'block' : 'none';
+      if (!ativo) {
+        selectFrequencia.value = '';
+        camposSemanal.style.display = 'none';
+        camposMensal.style.display = 'none';
+      }
+    });
+
+    selectFrequencia.addEventListener('change', () => {
+      camposSemanal.style.display = selectFrequencia.value === 'semanal' ? 'block' : 'none';
+      camposMensal.style.display  = selectFrequencia.value === 'mensal'  ? 'block' : 'none';
+    });
+  }
+
+  configurarModalMovimentacao('r', 'modalNovaReceita');
+  configurarModalMovimentacao('d', 'modalNovaDespesa');
+
+  // === Preview de ícone no modal de categoria ===
+  const selectIcone = document.getElementById('cat-icone');
+  const previewIcone = document.querySelector('#cat-icone-preview i');
+  if (selectIcone && previewIcone) {
+    selectIcone.addEventListener('change', () => {
+      previewIcone.className = `bi ${selectIcone.value}`;
+    });
+  }
 });

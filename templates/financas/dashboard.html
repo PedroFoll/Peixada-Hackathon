@@ -38,6 +38,22 @@
     </nav>
   </header>
 
+  <!-- Botões de ação rápida -->
+  <div class="d-flex flex-wrap gap-2 mb-4" role="toolbar" aria-label="Ações rápidas">
+    <button type="button" class="btn btn-success btn-sm"
+            data-bs-toggle="modal" data-bs-target="#modalNovaReceita">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Receita
+    </button>
+    <button type="button" class="btn btn-danger btn-sm"
+            data-bs-toggle="modal" data-bs-target="#modalNovaDespesa">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova Despesa
+    </button>
+    <button type="button" class="btn btn-outline-primary btn-sm"
+            data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
+      <i class="bi bi-tags me-1" aria-hidden="true"></i>Nova Categoria
+    </button>
+  </div>
+
   <!-- Cards de resumo -->
   <section aria-labelledby="titulo-resumo" class="mb-4">
     <h2 class="visually-hidden" id="titulo-resumo">Resumo financeiro</h2>
@@ -220,6 +236,306 @@
       {% endif %}
     </div>
   </section>
+
+  <!-- ====== Modal Nova Receita ====== -->
+  <div class="modal fade" id="modalNovaReceita" tabindex="-1"
+       aria-labelledby="modalNovaReceitaLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovaReceitaLabel">
+            <i class="bi bi-arrow-up-circle-fill text-success me-2" aria-hidden="true"></i>Nova Receita
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" action="{% url 'financas:criar_movimentacao' %}">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" value="receita">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="r-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
+                <select name="categoria" id="r-categoria" class="form-select" required>
+                  <option value="">Selecione uma categoria</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}">{{ cat.nome }}</option>
+                  {% endfor %}
+                </select>
+                {% if not categorias %}
+                <div class="form-text text-warning">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Nenhuma categoria cadastrada.
+                  <a href="{% url 'financas:categorias' %}" class="text-warning">Criar categoria</a>
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="r-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="number" name="valor" id="r-valor" class="form-control"
+                       step="0.01" min="0.01" placeholder="0,00" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="r-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
+                <input type="date" name="data" id="r-data" class="form-control" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="r-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="r-descricao" class="form-control"
+                       placeholder="Descrição (opcional)" maxlength="255">
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" name="recorrente" id="r-recorrente"
+                         class="form-check-input" value="on">
+                  <label class="form-check-label" for="r-recorrente">É recorrente?</label>
+                </div>
+              </div>
+              <div id="r-campos-recorrencia" class="col-12" style="display:none;">
+                <div class="card bg-light border-0">
+                  <div class="card-body">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label for="r-frequencia" class="form-label fw-medium">Frequência</label>
+                        <select name="frequencia" id="r-frequencia" class="form-select">
+                          <option value="">Selecione...</option>
+                          <option value="diaria">Diária</option>
+                          <option value="semanal">Semanal</option>
+                          <option value="mensal">Mensal</option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label for="r-data-limite" class="form-label fw-medium">Data Limite</label>
+                        <input type="date" name="data_limite" id="r-data-limite" class="form-control">
+                        <div class="form-text">Deixe em branco para recorrência indefinida.</div>
+                      </div>
+                      <div id="r-campos-semanal" class="col-12" style="display:none;">
+                        <label class="form-label fw-medium d-block">Dias da semana</label>
+                        <div class="d-flex flex-wrap gap-3">
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="r-dia-0">Seg</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="r-dia-1">Ter</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="r-dia-2">Qua</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="r-dia-3">Qui</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="r-dia-4">Sex</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="r-dia-5">Sáb</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="r-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="r-dia-6">Dom</label></div>
+                        </div>
+                      </div>
+                      <div id="r-campos-mensal" class="col-12 col-md-4" style="display:none;">
+                        <label for="r-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
+                        <input type="number" name="dia_mes" id="r-dia-mes" class="form-control"
+                               min="1" max="31" placeholder="Ex: 5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Receita
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modal Nova Despesa ====== -->
+  <div class="modal fade" id="modalNovaDespesa" tabindex="-1"
+       aria-labelledby="modalNovaDespesaLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovaDespesaLabel">
+            <i class="bi bi-arrow-down-circle-fill text-danger me-2" aria-hidden="true"></i>Nova Despesa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" action="{% url 'financas:criar_movimentacao' %}">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" value="despesa">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="d-categoria" class="form-label fw-medium">Categoria <span class="text-danger">*</span></label>
+                <select name="categoria" id="d-categoria" class="form-select" required>
+                  <option value="">Selecione uma categoria</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}">{{ cat.nome }}</option>
+                  {% endfor %}
+                </select>
+                {% if not categorias %}
+                <div class="form-text text-warning">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Nenhuma categoria cadastrada.
+                  <a href="{% url 'financas:categorias' %}" class="text-warning">Criar categoria</a>
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="d-valor" class="form-label fw-medium">Valor (R$) <span class="text-danger">*</span></label>
+                <input type="number" name="valor" id="d-valor" class="form-control"
+                       step="0.01" min="0.01" placeholder="0,00" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="d-data" class="form-label fw-medium">Data <span class="text-danger">*</span></label>
+                <input type="date" name="data" id="d-data" class="form-control" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="d-descricao" class="form-label fw-medium">Descrição</label>
+                <input type="text" name="descricao" id="d-descricao" class="form-control"
+                       placeholder="Descrição (opcional)" maxlength="255">
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" name="recorrente" id="d-recorrente"
+                         class="form-check-input" value="on">
+                  <label class="form-check-label" for="d-recorrente">É recorrente?</label>
+                </div>
+              </div>
+              <div id="d-campos-recorrencia" class="col-12" style="display:none;">
+                <div class="card bg-light border-0">
+                  <div class="card-body">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label for="d-frequencia" class="form-label fw-medium">Frequência</label>
+                        <select name="frequencia" id="d-frequencia" class="form-select">
+                          <option value="">Selecione...</option>
+                          <option value="diaria">Diária</option>
+                          <option value="semanal">Semanal</option>
+                          <option value="mensal">Mensal</option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label for="d-data-limite" class="form-label fw-medium">Data Limite</label>
+                        <input type="date" name="data_limite" id="d-data-limite" class="form-control">
+                        <div class="form-text">Deixe em branco para recorrência indefinida.</div>
+                      </div>
+                      <div id="d-campos-semanal" class="col-12" style="display:none;">
+                        <label class="form-label fw-medium d-block">Dias da semana</label>
+                        <div class="d-flex flex-wrap gap-3">
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-0" value="0" class="form-check-input"><label class="form-check-label" for="d-dia-0">Seg</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-1" value="1" class="form-check-input"><label class="form-check-label" for="d-dia-1">Ter</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-2" value="2" class="form-check-input"><label class="form-check-label" for="d-dia-2">Qua</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-3" value="3" class="form-check-input"><label class="form-check-label" for="d-dia-3">Qui</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-4" value="4" class="form-check-input"><label class="form-check-label" for="d-dia-4">Sex</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-5" value="5" class="form-check-input"><label class="form-check-label" for="d-dia-5">Sáb</label></div>
+                          <div class="form-check"><input type="checkbox" name="dias_semana" id="d-dia-6" value="6" class="form-check-input"><label class="form-check-label" for="d-dia-6">Dom</label></div>
+                        </div>
+                      </div>
+                      <div id="d-campos-mensal" class="col-12 col-md-4" style="display:none;">
+                        <label for="d-dia-mes" class="form-label fw-medium">Dia do mês (1–31)</label>
+                        <input type="number" name="dia_mes" id="d-dia-mes" class="form-control"
+                               min="1" max="31" placeholder="Ex: 5">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Despesa
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Modal Nova Categoria ====== -->
+  <div class="modal fade" id="modalNovaCategoria" tabindex="-1"
+       aria-labelledby="modalNovaCategoriaLabel" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovaCategoriaLabel">
+            <i class="bi bi-tags-fill text-primary me-2" aria-hidden="true"></i>Nova Categoria
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form method="post" action="{% url 'financas:criar_categoria' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="cat-nome" class="form-label fw-medium">Nome <span class="text-danger">*</span></label>
+                <input type="text" name="nome" id="cat-nome" class="form-control"
+                       placeholder="Ex: Alimentação" maxlength="100" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="cat-cor" class="form-label fw-medium">Cor</label>
+                <input type="color" name="cor" id="cat-cor"
+                       class="form-control form-control-color" value="#6c757d" title="Escolha uma cor">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="cat-icone" class="form-label fw-medium">Ícone</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="cat-icone-preview" aria-hidden="true">
+                    <i class="bi bi-tag"></i>
+                  </span>
+                  <select name="icone" id="cat-icone" class="form-select" aria-describedby="cat-icone-preview">
+                    <optgroup label="Alimentação &amp; Compras">
+                      <option value="bi-cart">🛒 Compras</option>
+                      <option value="bi-bag">👜 Bolsa / Vestuário</option>
+                      <option value="bi-cup-hot">☕ Café / Bebidas</option>
+                      <option value="bi-egg-fried">🍳 Alimentação</option>
+                    </optgroup>
+                    <optgroup label="Casa &amp; Utilidades">
+                      <option value="bi-house">🏠 Moradia</option>
+                      <option value="bi-lightning-charge">⚡ Energia Elétrica</option>
+                      <option value="bi-droplet">💧 Água</option>
+                      <option value="bi-wifi">📶 Internet</option>
+                      <option value="bi-phone">📱 Telefone</option>
+                    </optgroup>
+                    <optgroup label="Transporte">
+                      <option value="bi-car-front">🚗 Carro</option>
+                      <option value="bi-bicycle">🚲 Bicicleta</option>
+                      <option value="bi-airplane">✈️ Viagens</option>
+                      <option value="bi-bus-front">🚌 Transporte Público</option>
+                    </optgroup>
+                    <optgroup label="Saúde &amp; Educação">
+                      <option value="bi-heart-pulse">❤️ Saúde</option>
+                      <option value="bi-mortarboard">🎓 Educação</option>
+                      <option value="bi-book">📚 Livros</option>
+                      <option value="bi-activity">📊 Academia / Esporte</option>
+                    </optgroup>
+                    <optgroup label="Lazer &amp; Entretenimento">
+                      <option value="bi-film">🎬 Entretenimento</option>
+                      <option value="bi-music-note">🎵 Música</option>
+                      <option value="bi-controller">🎮 Jogos</option>
+                      <option value="bi-gift">🎁 Presentes</option>
+                    </optgroup>
+                    <optgroup label="Finanças">
+                      <option value="bi-cash-stack">💵 Salário / Renda</option>
+                      <option value="bi-piggy-bank">🐷 Poupança</option>
+                      <option value="bi-bank">🏦 Banco / Investimentos</option>
+                      <option value="bi-credit-card">💳 Cartão / Pagamentos</option>
+                      <option value="bi-receipt">🧾 Contas</option>
+                      <option value="bi-briefcase">💼 Trabalho</option>
+                      <option value="bi-bar-chart-line">📈 Rendimentos</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                      <option value="bi-tag" selected>🏷️ Geral</option>
+                      <option value="bi-three-dots">⋯ Outros</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar Categoria
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
 </main>
 {% endblock %}
