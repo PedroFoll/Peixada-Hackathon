@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Alterar Senha — Peixada Finanças{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="auth-logo__icon">
+        <i class="bi bi-shield-lock"></i>
+      </div>
+      <span class="auth-logo__text">Alterar Senha</span>
+    </div>
+
+    <h1 class="auth-title">Nova senha</h1>
+    <p class="auth-subtitle">Escolha uma senha segura com pelo menos 8 caracteres</p>
+
+    {% include "partials/messages.html" %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="row g-3">
+
+        <!-- Senha atual -->
+        <div class="col-12">
+          <label for="{{ form.old_password.id_for_label }}" class="form-label">
+            Senha Atual <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            {{ form.old_password }}
+            {% if form.old_password.errors %}
+              <div class="invalid-feedback d-block">{{ form.old_password.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Nova senha -->
+        <div class="col-12">
+          <label for="{{ form.new_password1.id_for_label }}" class="form-label">
+            Nova Senha <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            {{ form.new_password1 }}
+            <button type="button" class="btn btn-outline-secondary" id="toggleNova" aria-label="Mostrar nova senha">
+              <i class="bi bi-eye" id="iconeNova"></i>
+            </button>
+            {% if form.new_password1.errors %}
+              <div class="invalid-feedback d-block">{{ form.new_password1.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Confirmar nova senha -->
+        <div class="col-12">
+          <label for="{{ form.new_password2.id_for_label }}" class="form-label">
+            Confirmar Nova Senha <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            {{ form.new_password2 }}
+            {% if form.new_password2.errors %}
+              <div class="invalid-feedback d-block">{{ form.new_password2.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-12 mt-1">
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            <i class="bi bi-check-circle me-2"></i>Salvar Nova Senha
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div class="auth-footer mt-3">
+      <a href="{% url 'usuarios:perfil' %}">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao perfil
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleBtn = document.getElementById('toggleNova');
+  const input = document.getElementById('{{ form.new_password1.id_for_label }}');
+  const icone = document.getElementById('iconeNova');
+  toggleBtn.addEventListener('click', () => {
+    const visivel = input.type === 'text';
+    input.type = visivel ? 'password' : 'text';
+    icone.className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
+  });
+});
+</script>
+{% endblock %}

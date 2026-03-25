@@ -89,7 +89,7 @@ Ao criar views:
 
 1. Prefira **views baseadas em classe** (`ListView`, `CreateView`, `UpdateView`, `DeleteView`, `DetailView`) para operações CRUD padrão.
 2. Use **views baseadas em função** para lógicas específicas ou fluxos customizados.
-3. Proteja views com `@login_required` ou `LoginRequiredMixin`.
+3. Proteja views com `LoginRequiredMixin`.
 4. Passe contexto rico para os templates e use `get_queryset()` para filtrar por usuário.
 5. Configure `urls.py` com nomes de rota (`name=`) em todos os endpoints.
 
@@ -138,7 +138,7 @@ Ao implementar autenticação:
 
 1. Use o sistema de autenticação nativo do Django (`django.contrib.auth`).
 2. Use `LoginView`, `LogoutView` e `PasswordChangeView` nativos.
-3. Proteja todas as views com dados do usuário via `@login_required` ou `LoginRequiredMixin`.
+3. Proteja todas as views com dados do usuário via `LoginRequiredMixin`.
 4. Filtre os dados sempre pelo `request.user` para evitar acesso cruzado entre usuários.
 5. Use `get_object_or_404` combinado com filtro por usuário para evitar acesso não autorizado:
    ```python
@@ -146,7 +146,7 @@ Ao implementar autenticação:
    ```
 
 6. Implemente tratamento de erros 404 e redirecionamento para login:
-   - Usuário **não autenticado** tentando acessar página protegida → redireciona para login (comportamento padrão do `LoginRequiredMixin`/`@login_required`).
+   - Usuário **não autenticado** tentando acessar página protegida → redireciona para login (comportamento padrão do `LoginRequiredMixin`).
    - Usuário **autenticado** tentando acessar página inexistente → exibe página 404 customizada.
 
    **Configuração no `settings.py`:**
@@ -197,7 +197,7 @@ Ao implementar autenticação:
    LOGOUT_REDIRECT_URL = '/conta/login/' # após logout
    ```
 
-   O `LoginRequiredMixin` e `@login_required` redirecionam automaticamente para `LOGIN_URL`
+   O `LoginRequiredMixin` redireciona automaticamente para `LOGIN_URL`
    quando o usuário não está autenticado, preservando a URL original no parâmetro `?next=`.
 
    **Para testar localmente sem desativar DEBUG**, use a view diretamente:

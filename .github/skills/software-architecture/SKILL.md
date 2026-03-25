@@ -107,7 +107,7 @@ Checklist obrigatório de segurança antes do deploy:
 - [ ] `SECRET_KEY` nunca hardcoded — usar variável de ambiente ou arquivo `.env` com `python-decouple`
 - [ ] `DEBUG = False` em produção
 - [ ] `ALLOWED_HOSTS` configurado explicitamente
-- [ ] Todas as views com dados do usuário protegidas por `@login_required` ou `LoginRequiredMixin`
+- [ ] Todas as views com dados do usuário protegidas por `LoginRequiredMixin`
 - [ ] Dados filtrados sempre por `request.user` — nunca expor dados de outros usuários
 - [ ] `get_object_or_404(Model, pk=pk, usuario=request.user)` para acesso a objetos individuais
 - [ ] `{% csrf_token %}` em todos os formulários POST

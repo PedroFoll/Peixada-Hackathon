@@ -30,7 +30,7 @@ Liste qualquer modelo que viola estas práticas.
 ## Etapa 3 — Segurança
 
 Leia as views, forms e settings e verifique:
-- [ ] Todas as views com dados do usuário têm `@login_required` ou `LoginRequiredMixin`?
+- [ ] Todas as views com dados do usuário têm `LoginRequiredMixin`?
 - [ ] Os dados são filtrados por `request.user` em todas as queries relevantes?
 - [ ] `get_object_or_404` é usado com filtro por `usuario=request.user` ao buscar objetos individuais?
 - [ ] Todos os formulários POST têm `{% csrf_token %}` no template?

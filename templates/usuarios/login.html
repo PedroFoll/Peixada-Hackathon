@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Entrar — Peixada Finanças{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="auth-logo__icon">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <span class="auth-logo__text">Peixada Finanças</span>
+    </div>
+
+    <h1 class="auth-title">Bem-vindo de volta!</h1>
+    <p class="auth-subtitle">Faça login para acessar sua conta</p>
+
+    {% include "partials/messages.html" %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="id_username" class="form-label">Usuário</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" name="username" id="id_username"
+                 class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                 placeholder="nome_usuario" autofocus required
+                 value="{{ form.username.value|default:'' }}">
+          {% if form.username.errors %}
+            <div class="invalid-feedback">{{ form.username.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label for="id_password" class="form-label">Senha</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" name="password" id="id_password"
+                 class="form-control{% if form.non_field_errors %} is-invalid{% endif %}"
+                 placeholder="••••••••" required>
+          <button type="button" class="btn btn-outline-secondary" id="toggleSenha" aria-label="Mostrar senha">
+            <i class="bi bi-eye" id="iconeSenha"></i>
+          </button>
+          {% if form.non_field_errors %}
+            <div class="invalid-feedback">{{ form.non_field_errors|join:", " }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 py-2">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+      </button>
+    </form>
+
+    <div class="auth-footer mt-3">
+      Não tem conta? <a href="{% url 'usuarios:cadastro' %}">Criar conta gratuita</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleBtn = document.getElementById('toggleSenha');
+  const input = document.getElementById('id_password');
+  const icone = document.getElementById('iconeSenha');
+  toggleBtn.addEventListener('click', () => {
+    const visivel = input.type === 'text';
+    input.type = visivel ? 'password' : 'text';
+    icone.className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
+  });
+});
+</script>
+{% endblock %}

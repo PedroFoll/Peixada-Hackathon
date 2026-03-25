@@ -60,7 +60,7 @@ SECURE_BROWSER_XSS_FILTER = True
 Ao implementar controle de acesso:
 
 1. Use sempre o sistema nativo `django.contrib.auth`.
-2. Proteja views com `@login_required` ou `LoginRequiredMixin`.
+2. Proteja views com `LoginRequiredMixin`.
 3. Filtre **sempre** por `request.user` — nunca exponha dados de outros usuários:
    ```python
    # CORRETO

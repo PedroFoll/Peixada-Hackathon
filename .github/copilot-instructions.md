@@ -1,6 +1,6 @@
 # Instruções Globais do Projeto — Peixada Hackathon
 
-Este projeto é uma aplicação web de **gestão financeira pessoal** desenvolvida com **Django 5.1**, **Python 3.13**, **SQLite**, **Bootstrap 5** e **Chart.js**, com renderização server-side via templates Django.
+Este projeto é chamado **Peixada Finanças** e é uma aplicação web de **gestão financeira pessoal** desenvolvida com **Django 5.1**, **Python 3.13**, **SQLite**, **Bootstrap 5** e **Chart.js**, com renderização server-side via templates Django.
 
 ---
 
