@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count, Q, Sum
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
@@ -79,7 +80,7 @@ def criar_movimentacao(request):
                     )
                 else:
                     messages.success(request, f'{mov.get_tipo_display()} adicionada com sucesso.')
-            except Exception as e:
+            except IntegrityError as e:
                 messages.error(request, f'Erro ao salvar movimentação: {e}')
         else:
             for erros in form.errors.values():
@@ -101,7 +102,7 @@ def criar_categoria(request):
                 cat.usuario = request.user
                 cat.save()
                 messages.success(request, f'Categoria "{cat.nome}" criada com sucesso.')
-            except Exception as e:
+            except IntegrityError as e:
                 messages.error(request, f'Erro ao criar categoria: {e}')
         else:
             for erros in form.errors.values():
@@ -193,7 +194,7 @@ def editar_movimentacao(request, pk):
             try:
                 form.save()
                 messages.success(request, 'Movimentação atualizada com sucesso.')
-            except Exception as e:
+            except IntegrityError as e:
                 messages.error(request, f'Erro ao atualizar movimentação: {e}')
         else:
             for erros in form.errors.values():
@@ -212,7 +213,7 @@ def excluir_movimentacao(request, pk):
             desc = mov.descricao or 'sem descrição'
             mov.delete()
             messages.success(request, f'Movimentação "{desc}" excluída com sucesso.')
-        except Exception as e:
+        except IntegrityError as e:
             messages.error(request, f'Erro ao excluir movimentação: {e}')
     else:
         messages.error(request, 'Método inválido.')
@@ -248,7 +249,7 @@ def editar_categoria(request, pk):
             try:
                 form.save()
                 messages.success(request, f'Categoria "{cat.nome}" atualizada com sucesso.')
-            except Exception as e:
+            except IntegrityError as e:
                 messages.error(request, f'Erro ao atualizar categoria: {e}')
         else:
             for erros in form.errors.values():
@@ -274,7 +275,7 @@ def excluir_categoria(request, pk):
                 nome = cat.nome
                 cat.delete()
                 messages.success(request, f'Categoria "{nome}" excluída com sucesso.')
-            except Exception as e:
+            except IntegrityError as e:
                 messages.error(request, f'Erro ao excluir categoria: {e}')
     else:
         messages.error(request, 'Método inválido.')

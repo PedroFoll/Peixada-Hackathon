@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from django.contrib.messages import constants as messages
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +15,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 # --- Segurança ---
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-placeholder-change-in-production')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('A variável de ambiente SECRET_KEY é obrigatória. Defina-a no arquivo .env.')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
