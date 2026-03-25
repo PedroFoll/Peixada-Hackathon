@@ -17,7 +17,7 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
-  {% if user.is_authenticated and block.super != None %}
+  {% if user.is_authenticated %}
     <!-- Topbar mobile -->
     <header class="topbar d-md-none d-flex align-items-center justify-content-between px-3 py-2">
       <button class="btn btn-sm btn-outline-secondary" type="button"
@@ -32,12 +32,14 @@
     </header>
 
     <!-- Offcanvas sidebar (mobile) -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMobile" aria-labelledby="sidebarMobileLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="sidebarMobileLabel">Menu</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-      </div>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMobile" aria-label="Menu principal">
       <div class="offcanvas-body p-0">
+        <button
+          type="button"
+          class="btn-close btn-close-white sidebar-mobile-close"
+          data-bs-dismiss="offcanvas"
+          aria-label="Fechar menu"
+        ></button>
         {% include "partials/sidebar.html" %}
       </div>
     </div>

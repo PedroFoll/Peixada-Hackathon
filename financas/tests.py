@@ -2,7 +2,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
@@ -688,4 +688,44 @@ class PerformanceSmokeTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['totais']['total_count'], 2000)
         self.assertEqual(len(response.context['page_obj'].object_list), 20)
+
+
+class Pagina404CustomizadaTest(TestCase):
+    @override_settings(DEBUG=True)
+    def test_rota_inexistente_exibe_404_customizada_em_debug(self):
+        response = self.client.get('/rota-que-nao-existe/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+        self.assertContains(response, 'Ops! Pagina nao encontrada (404)', status_code=404)
+
+    @override_settings(DEBUG=False)
+    def test_rota_inexistente_exibe_404_customizada_em_producao(self):
+        response = self.client.get('/outra-rota-inexistente/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+
+
+class MenuLateralResponsivoTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.usuario = criar_usuario()
+        self.cat = criar_categoria(self.usuario)
+        self.client.login(username='usuario_teste', password='Senha@123')
+
+    def _assert_menu_mobile(self, response):
+        self.assertContains(response, 'class="topbar d-md-none d-flex')
+        self.assertContains(response, 'data-bs-target="#sidebarMobile"')
+        self.assertContains(response, 'id="sidebarMobile"')
+
+    def test_menu_mobile_renderiza_no_dashboard(self):
+        response = self.client.get(reverse('financas:dashboard'))
+        self._assert_menu_mobile(response)
+
+    def test_menu_mobile_renderiza_em_lancamentos(self):
+        response = self.client.get(reverse('financas:lancamentos'))
+        self._assert_menu_mobile(response)
+
+    def test_menu_mobile_renderiza_em_categorias(self):
+        response = self.client.get(reverse('financas:categorias'))
+        self._assert_menu_mobile(response)
 

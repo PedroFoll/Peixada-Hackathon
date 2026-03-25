@@ -118,6 +118,31 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* === OFFCANVAS SIDEBAR MOBILE === */
+#sidebarMobile {
+  --bs-offcanvas-width: var(--sidebar-width);
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+
+#sidebarMobile .offcanvas-body {
+  position: relative;
+}
+
+.sidebar-mobile-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  opacity: .85;
+}
+
+.sidebar-mobile-close:hover,
+.sidebar-mobile-close:focus-visible {
+  opacity: 1;
+}
+
 /* === CONTEÚDO DE PÁGINA === */
 .page-content {
   padding: 1.5rem;
