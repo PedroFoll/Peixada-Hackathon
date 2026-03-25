@@ -696,7 +696,7 @@ class Pagina404CustomizadaTest(TestCase):
         response = self.client.get('/rota-que-nao-existe/')
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, '404.html')
-        self.assertContains(response, 'Ops! Pagina nao encontrada (404)', status_code=404)
+        self.assertContains(response, 'Página não encontrada', status_code=404)
 
     @override_settings(DEBUG=False)
     def test_rota_inexistente_exibe_404_customizada_em_producao(self):
