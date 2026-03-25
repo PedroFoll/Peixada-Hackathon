@@ -118,6 +118,9 @@
             <input type="password" name="password2" id="{{ form.password2.id_for_label }}"
                    class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
                    placeholder="Repita a senha" required>
+            <button type="button" class="btn btn-outline-secondary" id="toggleSenha2" aria-label="Mostrar confirmar senha">
+              <i class="bi bi-eye" id="iconeSenha2"></i>
+            </button>
             {% if form.password2.errors %}
               <div class="invalid-feedback">{{ form.password2.errors|join:", " }}</div>
             {% endif %}
@@ -142,14 +145,21 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const toggleBtn = document.getElementById('toggleSenha1');
-  const input = document.getElementById('{{ form.password1.id_for_label }}');
-  const icone = document.getElementById('iconeSenha1');
-  toggleBtn.addEventListener('click', () => {
-    const visivel = input.type === 'text';
-    input.type = visivel ? 'password' : 'text';
-    icone.className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
-  });
+  function configurarToggleSenha(toggleId, inputId, iconeId) {
+    const btn = document.getElementById(toggleId);
+    const input = document.getElementById(inputId);
+    const icone = document.getElementById(iconeId);
+    if (!btn || !input || !icone) return;
+    btn.addEventListener('click', () => {
+      const visivel = input.type === 'text';
+      input.type = visivel ? 'password' : 'text';
+      icone.className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
+      btn.setAttribute('aria-label', visivel ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  }
+
+  configurarToggleSenha('toggleSenha1', '{{ form.password1.id_for_label }}', 'iconeSenha1');
+  configurarToggleSenha('toggleSenha2', '{{ form.password2.id_for_label }}', 'iconeSenha2');
 });
 </script>
 {% endblock %}
