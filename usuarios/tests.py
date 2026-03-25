@@ -26,6 +26,12 @@ class CadastroViewTest(TestCase):
         self.assertRedirects(response, reverse('financas:dashboard'), fetch_redirect_response=False)
         self.assertTrue(User.objects.filter(username='joaosilva').exists())
 
+    def test_senha_e_armazenada_com_hash(self):
+        self.client.post(self.url, self.dados_validos)
+        usuario = User.objects.get(username='joaosilva')
+        self.assertTrue(usuario.password.startswith('pbkdf2_'))
+        self.assertNotEqual(usuario.password, self.dados_validos['password1'])
+
     def test_cadastro_post_valido_loga_usuario_automaticamente(self):
         self.client.post(self.url, self.dados_validos)
         response = self.client.get(reverse('financas:dashboard'))
