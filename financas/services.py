@@ -19,6 +19,104 @@ def get_periodo(filtro):
         return date(hoje.year, hoje.month, 1), hoje
 
 
+def gerar_movimentacoes_recorrentes(movimentacao):
+    """
+    A partir de uma movimentação marcada como recorrente, gera todas as
+    ocorrências futuras até a data_limite (ou até 1 ano à frente se
+    data_limite não estiver definida).
+
+    Retorna a quantidade de movimentações criadas.
+    """
+    if not movimentacao.recorrente or not movimentacao.frequencia:
+        return 0
+
+    data_inicio = movimentacao.data
+    data_limite = movimentacao.data_limite or (data_inicio + timedelta(days=365))
+
+    datas = _calcular_datas_recorrentes(
+        frequencia=movimentacao.frequencia,
+        data_inicio=data_inicio,
+        data_limite=data_limite,
+        dias_semana=movimentacao.dias_semana,
+        dia_mes=movimentacao.dia_mes,
+    )
+
+    novas = []
+    for dt in datas:
+        novas.append(Movimentacao(
+            usuario=movimentacao.usuario,
+            categoria=movimentacao.categoria,
+            descricao=movimentacao.descricao,
+            valor=movimentacao.valor,
+            tipo=movimentacao.tipo,
+            data=dt,
+            recorrente=False,
+        ))
+
+    if novas:
+        Movimentacao.objects.bulk_create(novas)
+
+    return len(novas)
+
+
+def _calcular_datas_recorrentes(frequencia, data_inicio, data_limite,
+                                dias_semana=None, dia_mes=None):
+    """Retorna lista de datas futuras (excluindo data_inicio) conforme a frequência."""
+    datas = []
+
+    if frequencia == 'diaria':
+        dt = data_inicio + timedelta(days=1)
+        while dt <= data_limite:
+            datas.append(dt)
+            dt += timedelta(days=1)
+
+    elif frequencia == 'semanal':
+        if not dias_semana:
+            # Sem dias específicos: repete no mesmo dia da semana
+            dt = data_inicio + timedelta(weeks=1)
+            while dt <= data_limite:
+                datas.append(dt)
+                dt += timedelta(weeks=1)
+        else:
+            dias = [int(d) for d in dias_semana.split(',') if d.strip().isdigit()]
+            dt = data_inicio + timedelta(days=1)
+            while dt <= data_limite:
+                if dt.weekday() in dias:
+                    datas.append(dt)
+                dt += timedelta(days=1)
+
+    elif frequencia == 'mensal':
+        dia = dia_mes or data_inicio.day
+        mes = data_inicio.month
+        ano = data_inicio.year
+
+        # Avança para o próximo mês
+        mes += 1
+        if mes > 12:
+            mes = 1
+            ano += 1
+
+        while True:
+            dia_real = min(dia, _ultimo_dia_mes(ano, mes))
+            dt = date(ano, mes, dia_real)
+            if dt > data_limite:
+                break
+            datas.append(dt)
+            mes += 1
+            if mes > 12:
+                mes = 1
+                ano += 1
+
+    return datas
+
+
+def _ultimo_dia_mes(ano, mes):
+    """Retorna o último dia do mês para o ano/mês informados."""
+    if mes == 12:
+        return 31
+    return (date(ano, mes + 1, 1) - timedelta(days=1)).day
+
+
 def calcular_totais(usuario, data_inicio, data_fim):
     qs = Movimentacao.objects.filter(
         usuario=usuario,

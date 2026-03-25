@@ -67,7 +67,15 @@ def criar_movimentacao(request):
                 mov = form.save(commit=False)
                 mov.usuario = request.user
                 mov.save()
-                messages.success(request, f'{mov.get_tipo_display()} adicionada com sucesso.')
+                if mov.recorrente and mov.frequencia:
+                    total = services.gerar_movimentacoes_recorrentes(mov)
+                    messages.success(
+                        request,
+                        f'{mov.get_tipo_display()} adicionada com sucesso '
+                        f'({total} ocorrência(s) recorrente(s) gerada(s)).',
+                    )
+                else:
+                    messages.success(request, f'{mov.get_tipo_display()} adicionada com sucesso.')
             except Exception as e:
                 messages.error(request, f'Erro ao salvar movimentação: {e}')
         else:
