@@ -236,12 +236,19 @@ def editar_categoria(request, pk):
 def excluir_categoria(request, pk):
     cat = get_object_or_404(Categoria, pk=pk, usuario=request.user)
     if request.method == 'POST':
-        try:
-            nome = cat.nome
-            cat.delete()
-            messages.success(request, f'Categoria "{nome}" excluída com sucesso.')
-        except Exception as e:
-            messages.error(request, f'Erro ao excluir categoria: {e}')
+        if cat.movimentacoes.exists():
+            messages.error(
+                request,
+                f'A categoria "{cat.nome}" possui movimentações vinculadas e não pode ser excluída. '
+                'Edite ou remova as movimentações antes de excluir a categoria.',
+            )
+        else:
+            try:
+                nome = cat.nome
+                cat.delete()
+                messages.success(request, f'Categoria "{nome}" excluída com sucesso.')
+            except Exception as e:
+                messages.error(request, f'Erro ao excluir categoria: {e}')
     else:
         messages.error(request, 'Método inválido.')
     return redirect('financas:categorias')

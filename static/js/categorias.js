@@ -46,11 +46,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (modalExcluir) {
     const actionBase = modalExcluir.dataset.actionBase;
     const formExcluir = document.getElementById('form-excluir-categoria');
-    const spanNome    = document.getElementById('excluir-cat-nome');
-    const avisoDiv    = document.getElementById('excluir-cat-aviso');
-    const spanCount   = document.getElementById('excluir-cat-count');
-    const spanPlural  = document.getElementById('excluir-cat-plural');
-    const spanPlural2 = document.getElementById('excluir-cat-plural2');
+
+    // Elementos do estado «bloqueado»
+    const bloqueadoBody   = document.getElementById('excluir-cat-bloqueado');
+    const bloqueadoFooter = document.getElementById('excluir-cat-bloqueado-footer');
+    const spanNomeBlocked  = document.getElementById('excluir-cat-nome-blocked');
+    const spanCountBlocked = document.getElementById('excluir-cat-count-blocked');
+    const spanPluralBlocked  = document.getElementById('excluir-cat-plural-blocked');
+    const spanPlural2Blocked = document.getElementById('excluir-cat-plural2-blocked');
+
+    // Elementos do estado «permitido»
+    const permitidoBody   = document.getElementById('excluir-cat-permitido');
+    const permitidoFooter = document.getElementById('excluir-cat-permitido-footer');
+    const spanNome = document.getElementById('excluir-cat-nome');
 
     modalExcluir.addEventListener('show.bs.modal', (event) => {
       const btn   = event.relatedTarget;
@@ -58,16 +66,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const nome  = btn.dataset.nome;
       const count = parseInt(btn.dataset.count, 10);
 
-      formExcluir.action = actionBase.replace('/0/', `/${pk}/`);
-      spanNome.textContent = nome;
-
       if (count > 0) {
-        spanCount.textContent  = count;
-        spanPlural.textContent = count === 1 ? 'ão' : 'ões';
-        spanPlural2.textContent = count === 1 ? '' : 's';
-        avisoDiv.classList.remove('d-none');
+        // Bloqueado: mostra aviso, esconde form de exclusão
+        spanNomeBlocked.textContent   = nome;
+        spanCountBlocked.textContent  = count;
+        spanPluralBlocked.textContent  = count === 1 ? 'ão' : 'ões';
+        spanPlural2Blocked.textContent = count === 1 ? '' : 's';
+        bloqueadoBody.classList.remove('d-none');
+        bloqueadoFooter.classList.remove('d-none');
+        permitidoBody.classList.add('d-none');
+        permitidoFooter.classList.add('d-none');
       } else {
-        avisoDiv.classList.add('d-none');
+        // Permitido: mostra confirmação normal
+        formExcluir.action = actionBase.replace('/0/', `/${pk}/`);
+        spanNome.textContent = nome;
+        permitidoBody.classList.remove('d-none');
+        permitidoFooter.classList.remove('d-none');
+        bloqueadoBody.classList.add('d-none');
+        bloqueadoFooter.classList.add('d-none');
       }
     });
   }

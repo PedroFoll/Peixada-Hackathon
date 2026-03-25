@@ -67,7 +67,8 @@
                       data-count="{{ cat.total_movimentacoes }}"
                       data-bs-toggle="modal"
                       data-bs-target="#modalExcluirCategoria"
-                      aria-label="Excluir categoria {{ cat.nome }}">
+                      aria-label="{% if cat.total_movimentacoes > 0 %}Não é possível excluir: categoria {{ cat.nome }} possui movimentações{% else %}Excluir categoria {{ cat.nome }}{% endif %}"
+                      {% if cat.total_movimentacoes > 0 %}title="Possui movimentações — não pode ser excluída"{% endif %}>
                 <i class="bi bi-trash me-1" aria-hidden="true"></i>Excluir
               </button>
             </div>
@@ -306,22 +307,38 @@
           </h3>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
-        <div class="modal-body pt-0">
+        <!-- Estado: bloqueado (possui movimentações) -->
+        <div id="excluir-cat-bloqueado" class="modal-body pt-0 d-none">
+          <div class="alert alert-danger mb-2" role="alert">
+            <i class="bi bi-x-circle-fill me-2" aria-hidden="true"></i>
+            <strong>Exclusão não permitida.</strong>
+          </div>
+          <p class="mb-1">
+            A categoria <strong id="excluir-cat-nome-blocked"></strong> possui
+            <strong id="excluir-cat-count-blocked"></strong>
+            movimentaç<span id="excluir-cat-plural-blocked"></span>
+            vinculada<span id="excluir-cat-plural2-blocked"></span>
+            e <strong>não pode ser excluída</strong>.
+          </p>
+          <p class="text-muted small mb-0">
+            Para excluí-la, primeiro remova ou altere a categoria das movimentações vinculadas.
+          </p>
+        </div>
+        <div id="excluir-cat-bloqueado-footer" class="modal-footer border-0 pt-0 d-none">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+
+        <!-- Estado: permitido (sem movimentações) -->
+        <div id="excluir-cat-permitido" class="modal-body pt-0 d-none">
           <p class="mb-1">
             Tem certeza que deseja excluir a categoria
             <strong id="excluir-cat-nome"></strong>?
           </p>
-          <div id="excluir-cat-aviso" class="alert alert-warning d-none py-2 mt-2" role="alert">
-            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-            Esta categoria possui <strong id="excluir-cat-count"></strong>
-            movimentaç<span id="excluir-cat-plural"></span> vinculada<span id="excluir-cat-plural2"></span>.
-            Elas não serão excluídas, mas ficarão sem categoria.
-          </div>
           <p class="text-muted small mb-0 mt-2">Esta ação não pode ser desfeita.</p>
         </div>
         <form method="post" id="form-excluir-categoria" action="#">
           {% csrf_token %}
-          <div class="modal-footer border-0 pt-0">
+          <div id="excluir-cat-permitido-footer" class="modal-footer border-0 pt-0 d-none">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="submit" class="btn btn-danger">
               <i class="bi bi-trash me-1" aria-hidden="true"></i>Excluir
