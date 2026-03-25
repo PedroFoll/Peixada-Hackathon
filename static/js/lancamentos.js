@@ -113,22 +113,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── Auto-fill today's date on create modals ───────────────────
-  const today = new Date().toISOString().split('T')[0];
-  [['modalNovaReceita', 'r-data'], ['modalNovaDespesa', 'd-data']].forEach(([modalId, inputId]) => {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    modal.addEventListener('show.bs.modal', () => {
-      const input = document.getElementById(inputId);
-      if (input && !input.value) input.value = today;
+  // ── Novo Lançamento — tipo toggle + auto-fill date ────────────
+  const modalNovo = document.getElementById('modalNovoLancamento');
+  if (modalNovo) {
+    const today = new Date().toISOString().split('T')[0];
+    modalNovo.addEventListener('show.bs.modal', () => {
+      const inputData = document.getElementById('n-data');
+      if (inputData && !inputData.value) inputData.value = today;
     });
-  });
 
-  // ── Recorrência toggle for Nova Receita ───────────────────────
-  configurarRecorrenciaModal('r');
+    const toggleReceita = document.getElementById('n-toggle-receita');
+    const toggleDespesa = document.getElementById('n-toggle-despesa');
+    const iconeTipo     = document.getElementById('n-icone-tipo');
+    const tituloTexto   = document.getElementById('n-titulo-texto');
+    const hiddenTipo    = document.getElementById('n-tipo');
+    const btnSalvar     = document.getElementById('n-btn-salvar');
+    const btnTexto      = document.getElementById('n-btn-texto');
 
-  // ── Recorrência toggle for Nova Despesa ───────────────────────
-  configurarRecorrenciaModal('d');
+    function atualizarTipoNovo(tipo) {
+      hiddenTipo.value = tipo;
+      if (tipo === 'receita') {
+        iconeTipo.className   = 'bi bi-arrow-up-circle-fill text-success me-2';
+        tituloTexto.textContent = 'Nova Receita';
+        btnSalvar.className   = 'btn btn-success';
+        btnTexto.textContent  = 'Salvar Receita';
+      } else {
+        iconeTipo.className   = 'bi bi-arrow-down-circle-fill text-danger me-2';
+        tituloTexto.textContent = 'Nova Despesa';
+        btnSalvar.className   = 'btn btn-danger';
+        btnTexto.textContent  = 'Salvar Despesa';
+      }
+    }
+
+    if (toggleReceita) {
+      toggleReceita.addEventListener('change', () => atualizarTipoNovo('receita'));
+    }
+    if (toggleDespesa) {
+      toggleDespesa.addEventListener('change', () => atualizarTipoNovo('despesa'));
+    }
+  }
+
+  // ── Recorrência toggle for Novo Lançamento ────────────────────
+  configurarRecorrenciaModal('n');
 
   function configurarRecorrenciaModal(p) {
     const checkRec = document.getElementById(`${p}-recorrente`);
